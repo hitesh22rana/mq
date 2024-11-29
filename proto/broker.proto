@@ -1,0 +1,32 @@
+// proto/broker.proto
+
+syntax = "proto3";
+
+package broker;
+
+import "event.proto";
+
+option go_package = "github.com/hitesh22rana/mq/pkg/proto/broker;broker";
+
+// PublishRequest is sent by producers to publish messages
+message PublishRequest {
+  string channel  = 1;  // The channel to publish to
+  string payload  = 2;  // The message payload
+}
+
+// PublishResponse is the broker's response to a PublishRequest
+message PublishResponse {}
+
+// SubscribeRequest is sent by subscribers to subscribe to a channel
+message SubscribeRequest {
+  string channel = 1; // The channel to subscribe to
+}
+
+// BrokerService is the broker's service definition
+service BrokerService {
+  // Producer publishes a message to a channel
+  rpc Publish(PublishRequest) returns (PublishResponse) {}
+
+  // Consumer subscribes to a channel and receives a stream of messages
+  rpc Subscribe(SubscribeRequest) returns (stream event.Message) {}
+}
