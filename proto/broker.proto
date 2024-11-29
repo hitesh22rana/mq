@@ -8,6 +8,14 @@ import "event.proto";
 
 option go_package = "github.com/hitesh22rana/mq/pkg/proto/broker;broker";
 
+// CreateChannelRequest is sent to create a new channel
+message CreateChannelRequest {
+  string channel = 1; // The channel to create
+}
+
+// CreateChannelResponse is the broker's response to a CreateChannelRequest
+message CreateChannelResponse {}
+
 // PublishRequest is sent by producers to publish messages
 message PublishRequest {
   string channel  = 1;  // The channel to publish to
@@ -24,6 +32,9 @@ message SubscribeRequest {
 
 // BrokerService is the broker's service definition
 service BrokerService {
+  // CreateChannel creates a new channel
+  rpc CreateChannel(CreateChannelRequest) returns (CreateChannelResponse) {}
+
   // Producer publishes a message to a channel
   rpc Publish(PublishRequest) returns (PublishResponse) {}
 

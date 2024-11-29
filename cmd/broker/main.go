@@ -23,10 +23,10 @@ func main() {
 	memoryStorage := storage.NewMemoryStorage(log)
 
 	// Create a new broker service
-	srv := broker.NewService(memoryStorage, log)
+	srv := broker.NewService(log, memoryStorage)
 
 	// Create a new broker server
-	server := broker.NewServer(srv)
+	server := broker.NewServer(log, srv)
 
 	// Create a TCP listener
 	listener, err := net.Listen("tcp", ":50051")

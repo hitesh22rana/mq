@@ -15,9 +15,14 @@ func (s *Service) unsubscribe(ctx context.Context, channel string, subscriberID 
 
 	// Check if the channel exists
 	subscribers, exists := s.subscribers[channel]
-	if !exists || len(subscribers) == 0 {
-		s.logger.Error("channel does not exist", zap.String("channel", channel))
+	if !exists {
+		s.logger.Error("error: channel does not exist", zap.String("channel", channel))
 		return ErrChannelDoesNotExist
+	}
+
+	if len(subscribers) == 0 {
+		s.logger.Error("error: no subscribers in the channel", zap.String("channel", channel))
+		return ErrSubscriberDoesNotExist
 	}
 
 	// Check if the subscriber have subscribed or not
@@ -25,7 +30,7 @@ func (s *Service) unsubscribe(ctx context.Context, channel string, subscriberID 
 		return ErrSubscriberDoesNotExist
 	}
 
+	// Remove the subscriber from the channel
 	delete(subscribers, subscriberID)
-
 	return nil
 }

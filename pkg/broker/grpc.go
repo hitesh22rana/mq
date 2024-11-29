@@ -25,6 +25,11 @@ func NewGrpcServer(server *Server) *grpc.Server {
 	return s
 }
 
+// CreateChannel gRPC endpoint
+func (gRPC *GrpcServer) CreateChannel(ctx context.Context, req *broker.CreateChannelRequest) (*broker.CreateChannelResponse, error) {
+	return gRPC.server.CreateChannel(ctx, req)
+}
+
 // Publish gRPC endpoint
 func (gRPC *GrpcServer) Publish(ctx context.Context, req *broker.PublishRequest) (*broker.PublishResponse, error) {
 	return gRPC.server.Publish(ctx, req)

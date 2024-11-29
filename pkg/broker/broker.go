@@ -15,23 +15,24 @@ import (
 
 var (
 	// ErrFailedToSaveMessage is returned when the broker fails to save a message
-	ErrFailedToSaveMessage = errors.New("failed to save message")
+	ErrFailedToSaveMessage = errors.New("error: failed to save message")
 
 	// ErrChannelDoesNotExist is returned when the broker tries to publish a message to a non-existent channel
-	ErrChannelDoesNotExist = errors.New("channel does not exist")
+	ErrChannelDoesNotExist = errors.New("error: channel does not exist")
 
-	// ErrSubscriberAlreadyExists is returned when the broker tries to subscribe a subscriber that already exists
-	ErrSubscriberAlreadyExists = errors.New("subscriber already exists")
+	// ErrChannelAlreadyExists is returned when the broker tries to create a channel that already exists
+	ErrChannelAlreadyExists = errors.New("error: channel already exists")
 
 	// ErrSubscriberDoesNotExist is returned when the broker tries to unsubscribe a subscriber from a channel in which the subscriber does not exist
-	ErrSubscriberDoesNotExist = errors.New("subscriber is not subscribed to the channel")
+	ErrSubscriberDoesNotExist = errors.New("error: subscriber is not subscribed to the channel")
 )
 
 // Broker defines the interface for the message broker
 type Broker interface {
-	publish(context.Context, string, message) error
+	createChannel(context.Context, string) error
+	publish(context.Context, string, *message) error
 	subscribe(context.Context, string, string, chan<- *message) error
-	unsubscribe(context.Context)
+	unsubscribe(context.Context, string, string) error
 }
 
 type message struct {
@@ -49,7 +50,7 @@ type Service struct {
 }
 
 // NewService returns a new broker service
-func NewService(storage storage.Storage, logger *zap.Logger) *Service {
+func NewService(logger *zap.Logger, storage storage.Storage) *Service {
 	return &Service{
 		mu:          sync.RWMutex{},
 		logger:      logger,
@@ -60,14 +61,16 @@ func NewService(storage storage.Storage, logger *zap.Logger) *Service {
 
 // Server is the broker service implementation for gRPC
 type Server struct {
+	logger    *zap.Logger
 	validator utils.Validator
 	generator utils.Generator
-	srv       *Service
+	srv       Broker
 }
 
 // NewServer returns a new broker server
-func NewServer(srv *Service) *Server {
+func NewServer(logger *zap.Logger, srv *Service) *Server {
 	return &Server{
+		logger:    logger,
 		validator: utils.NewValidator(),
 		generator: utils.NewGenerator(),
 		srv:       srv,

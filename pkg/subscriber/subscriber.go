@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/hitesh22rana/mq/pkg/proto/broker"
+	broker "github.com/hitesh22rana/mq/pkg/proto/broker"
 )
 
 // Subscriber is a message subscriber
@@ -58,6 +58,6 @@ func (s *Subscriber) Subscribe(channel string) error {
 			return err
 		}
 
-		s.logger.Info("received message", zap.String("channel", channel), zap.String("payload", msg))
+		s.logger.Info("received message", zap.String("channel", channel), zap.Any("payload", msg))
 	}
 }

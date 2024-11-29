@@ -4,6 +4,7 @@ package broker
 
 import (
 	"context"
+	"sync"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -21,18 +22,14 @@ func (s *Service) subscribe(ctx context.Context, id string, channel string, msgC
 	// Check if the channel exists
 	ch, exists := s.subscribers[channel]
 	if !exists {
-		// Create a new channel if it doesn't exist
-		s.logger.Info("creating new channel", zap.String("channel", channel))
-		if err := s.storage.CreateChannel(channel); err != nil {
-			return ErrFailedToSaveMessage
-		}
-		s.subscribers[channel] = make(map[string]chan<- *message)
+		s.logger.Info("info: channel does not exist", zap.String("channel", channel))
+		return ErrChannelDoesNotExist
 	}
 
 	// Add the subscriber to the channel, but only if it doesn't already exist
 	if _, exists = ch[id]; exists {
-		s.logger.Info("subscriber already exists", zap.String("id", id), zap.String("channel", channel))
-		return ErrSubscriberAlreadyExists
+		s.logger.Info("info: subscriber already exists", zap.String("id", id), zap.String("channel", channel))
+		return nil
 	}
 
 	s.subscribers[channel][id] = msgChan
@@ -44,6 +41,7 @@ type subscribeInput struct {
 	channel string `validate:"required"`
 }
 
+// gRPC implementation of the Subscribe method
 func (s *Server) Subscribe(req *broker.SubscribeRequest, stream broker.BrokerService_SubscribeServer) error {
 	input := &subscribeInput{
 		channel: req.GetChannel(),
@@ -56,6 +54,7 @@ func (s *Server) Subscribe(req *broker.SubscribeRequest, stream broker.BrokerSer
 
 	// Create a new message channel
 	msgChan := make(chan *message)
+	var closeOnce sync.Once
 
 	// Subscribe the client
 	if err := s.srv.subscribe(stream.Context(), s.generator.GetUniqueSubscriberID(), input.channel, msgChan); err != nil {
@@ -65,7 +64,9 @@ func (s *Server) Subscribe(req *broker.SubscribeRequest, stream broker.BrokerSer
 	defer func() {
 		// Unsubscribe when the stream ends
 		_ = s.srv.unsubscribe(stream.Context(), input.channel, input.id)
-		close(msgChan)
+		closeOnce.Do(func() {
+			close(msgChan)
+		})
 	}()
 
 	// Stream the messages
@@ -85,6 +86,11 @@ func (s *Server) Subscribe(req *broker.SubscribeRequest, stream broker.BrokerSer
 				return status.Error(codes.Unavailable, "failed to send message")
 			}
 		case <-stream.Context().Done():
+			// Unsubscribe and close the channel only if it hasn't been closed yet
+			closeOnce.Do(func() {
+				_ = s.srv.unsubscribe(stream.Context(), input.channel, input.id)
+				close(msgChan)
+			})
 			return nil
 		}
 	}
