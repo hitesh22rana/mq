@@ -16,3 +16,6 @@ A high-performance message queue broker built in Go using gRPC. Designed for eff
 - Event-driven architectures
 - Real-time data streaming
 - Distributed systems messaging
+
+## Architecture
+![Architecture](https://github.com/hitesh22rana/mq/blob/main/.github/images/architecture.png)
