@@ -63,6 +63,7 @@ func (s *Server) Subscribe(req *broker.SubscribeRequest, stream broker.BrokerSer
 
 	defer func() {
 		// Unsubscribe when the stream ends
+		s.logger.Info("info: unsubscribing client", zap.String("id", input.id), zap.String("channel", input.channel))
 		_ = s.srv.unsubscribe(stream.Context(), input.channel, input.id)
 		closeOnce.Do(func() {
 			close(msgChan)

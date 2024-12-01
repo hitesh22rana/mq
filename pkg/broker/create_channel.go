@@ -12,15 +12,15 @@ import (
 	broker "github.com/hitesh22rana/mq/pkg/proto/broker"
 )
 
-// createChannel creates a new channel
+// createChannel creates a new channel, if it doesn't already exist else joins the existing channel
 func (s *Service) createChannel(ctx context.Context, channel string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	// Check if the channel already exists
+	// Check if the channel already exists, if it does return immediately
 	if _, exists := s.subscribers[channel]; exists {
-		s.logger.Error("error: channel already exists", zap.String("channel", channel))
-		return ErrChannelAlreadyExists
+		s.logger.Warn("warn: channel already exists", zap.String("channel", channel))
+		return nil
 	}
 
 	// Create a new channel in the storage
