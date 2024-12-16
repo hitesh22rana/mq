@@ -13,23 +13,25 @@ import (
 )
 
 // createChannel creates a new channel, if it doesn't already exist else joins the existing channel
-func (s *Service) createChannel(ctx context.Context, channel string) error {
+func (s *Service) createChannel(ctx context.Context, channel channel) error {
+	_channel := string(channel)
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	// Check if the channel already exists, if it does return immediately
-	if _, exists := s.subscribers[channel]; exists {
-		s.logger.Warn("warn: channel already exists", zap.String("channel", channel))
+	if s.storage.ChannelExists(_channel) {
+		s.logger.Warn("warn: channel already exists", zap.String("channel", _channel))
 		return nil
 	}
 
 	// Create a new channel in the storage
-	if err := s.storage.CreateChannel(channel); err != nil {
-		s.logger.Error("error: failed to create channel", zap.String("channel", channel), zap.Error(err))
+	if err := s.storage.CreateChannel(_channel); err != nil {
+		s.logger.Error("error: failed to create channel", zap.String("channel", _channel), zap.Error(err))
 	}
 
-	// Create a new channel and add it to the subscribers map
-	s.subscribers[channel] = make(map[string]chan<- *message)
+	s.logger.Info("channel created", zap.String("channel", _channel))
+
 	return nil
 }
 
@@ -49,7 +51,7 @@ func (s *Server) CreateChannel(ctx context.Context, req *broker.CreateChannelReq
 	}
 
 	// Create a new channel
-	if err := s.srv.createChannel(ctx, input.channel); err != nil {
+	if err := s.srv.createChannel(ctx, channel(input.channel)); err != nil {
 		return nil, status.Error(codes.AlreadyExists, "channel already exists")
 	}
 

@@ -64,7 +64,7 @@ func main() {
 		Channel: channel,
 	})
 	if err != nil {
-		panic(err)
+		log.Fatal("failed to create channel", zap.Error(err))
 	}
 
 	// Listen for interrupt signals

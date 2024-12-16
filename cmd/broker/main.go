@@ -3,6 +3,7 @@
 package main
 
 import (
+	"context"
 	"net"
 	"os"
 	"os/signal"
@@ -30,7 +31,7 @@ func main() {
 	}
 
 	// Create storage service
-	memoryStorage := storage.NewMemoryStorage(log)
+	memoryStorage := storage.NewMemoryStorage(log, cfg.Storage.MemoryStorageBatchSize)
 
 	// Create broker service
 	srv := broker.NewService(log, memoryStorage)
@@ -56,12 +57,27 @@ func main() {
 	}()
 
 	// Listen for interrupt signals for graceful shutdown
-	gracefulShutdown := make(chan os.Signal, 1)
-	signal.Notify(gracefulShutdown, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-	<-gracefulShutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
 	log.Info("shutting down Broker server...")
 
-	// Gracefully stop the broker server
-	grpcServer.GracefulStop()
-	log.Info("server stopped")
+	// Create a context with a timeout for the graceful shutdown
+	ctx, cancel := context.WithTimeout(context.Background(), cfg.Broker.BrokerGracefulShutdownTimeout)
+	defer cancel()
+
+	// Gracefully stop the broker server with timeout
+	done := make(chan struct{})
+	go func() {
+		grpcServer.GracefulStop()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		log.Info("server stopped gracefully")
+	case <-ctx.Done():
+		log.Warn("server shutdown timed out, forcing stop")
+		grpcServer.Stop()
+	}
 }

@@ -12,3 +12,9 @@ message Message {
   string payload    = 2;  // The message payload
   int64 timestamp   = 3;  // Unix timestamp in milliseconds
 }
+
+// Offset represents the offset of a message in a channel
+enum Offset {
+  BEGINNING = 0;  // Start consuming messages from the beginning
+  LATEST    = 1;  // Start consuming messages from the latest
+}

@@ -9,28 +9,19 @@ import (
 )
 
 // unsubscribe removes subscriber from the specified channel
-func (s *Service) unsubscribe(ctx context.Context, channel string, subscriberID string) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
+func (s *Service) unsubscribe(ctx context.Context, sub *subscriber, channel channel) error {
 	// Check if the channel exists
-	subscribers, exists := s.subscribers[channel]
-	if !exists {
-		s.logger.Error("error: channel does not exist", zap.String("channel", channel))
+	if !s.storage.ChannelExists(string(channel)) {
+		s.logger.Error("error: cannot unsubscribe from non-existent channel", zap.String("channel", string(channel)))
 		return ErrChannelDoesNotExist
 	}
 
-	if len(subscribers) == 0 {
-		s.logger.Error("error: no subscribers in the channel", zap.String("channel", channel))
-		return ErrSubscriberDoesNotExist
-	}
-
-	// Check if the subscriber have subscribed or not
-	if _, exists := subscribers[subscriberID]; !exists {
-		return ErrSubscriberDoesNotExist
-	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
 	// Remove the subscriber from the channel
-	delete(subscribers, subscriberID)
+	delete(s.channelToSubscribers[channel], sub)
+	s.logger.Info("info: subscriber removed", zap.String("id", sub.id), zap.String("channel", string(channel)))
+
 	return nil
 }
