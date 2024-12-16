@@ -9,16 +9,25 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+const (
+	// Development is the development environment
+	Development = "development"
+	// Production is the production environment
+	Production = "production"
+)
+
 // NewLogger initializes the logger
 func NewLogger(environment string) (*zap.Logger, error) {
 	var logger *zap.Logger
 	var err error
 
 	switch environment {
-	case "production":
+	case Production:
 		logger, err = productionLogger()
-	default:
+	case Development:
 		logger, err = developmentLogger()
+	default:
+		return nil, fmt.Errorf("unknown environment %s", environment)
 	}
 
 	if err != nil {
