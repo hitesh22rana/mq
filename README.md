@@ -1,15 +1,20 @@
 # MQ - Lightweight Message Queue Broker
 
-A high-performance message queue broker built in Go using gRPC. Designed for efficient pub/sub messaging with support for multiple channels and concurrent subscribers.
+A high-performance, pull-based message queue broker built in Go using gRPC. Designed for efficient pub/sub messaging where clients pull data at their own pace with support for configurable data pull intervals.
 
 ## Features
 - gRPC-based communication
+- Pull-based communication model
 - Pub/Sub messaging pattern
+- Clients control their data consumption rate
+- Configurable data pull intervals
+- Batch message retrieval to read data in chunks and prevent overload
+- Configurable batch size for optimized performance
 - Multiple channel support
 - In-memory message storage
 - Concurrent subscriber handling
 - Graceful connection management
-- Structured logging with Zap
+- Structured logging
 
 ## Use Cases
 - Microservices communication
@@ -18,6 +23,9 @@ A high-performance message queue broker built in Go using gRPC. Designed for eff
 - Distributed systems messaging
 
 ## Architecture
+
+In the pull-based architecture, subscribers actively request messages from the broker based on their capacity and desired data pull intervals. This allows clients to manage their own consumption rate and handle backpressure effectively.
+
 ![Architecture](https://github.com/hitesh22rana/mq/blob/main/.github/images/architecture.png)
 
 ## Prerequisites
