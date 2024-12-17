@@ -47,14 +47,14 @@ func (s *Service) publish(ctx context.Context, ch channel, msg *event.Message) e
 
 type publishInput struct {
 	channel string `validate:"required"`
-	payload string `validate:"required"`
+	Content []byte `validate:"required"`
 }
 
 // gRPC implementation of the Publish method
 func (s *Server) Publish(ctx context.Context, req *broker.PublishRequest) (*broker.PublishResponse, error) {
 	input := &publishInput{
 		channel: req.GetChannel(),
-		payload: req.GetPayload(),
+		Content: []byte(req.Content),
 	}
 
 	// Validate the input request
@@ -68,7 +68,7 @@ func (s *Server) Publish(ctx context.Context, req *broker.PublishRequest) (*brok
 		channel(input.channel),
 		&event.Message{
 			Id:        s.generator.GetUniqueMessageID(),
-			Payload:   input.payload,
+			Content:   input.Content,
 			CreatedAt: s.generator.GetCurrentTimestamp(),
 		}); err != nil {
 		return nil, status.Error(codes.Unavailable, "failed to publish message")

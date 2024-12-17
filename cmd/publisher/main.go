@@ -87,13 +87,13 @@ func main() {
 		fmt.Println("Enter the message to publish. Press Ctrl+C to stop.")
 		for {
 			fmt.Print("> ")
-			payload, _ := reader.ReadString('\n')
-			payload = strings.Replace(payload, "\n", "", -1)
+			content, _ := reader.ReadBytes('\n')
+			content = content[:len(content)-1] // Remove the newline character
 			_, err := client.Publish(
 				context.Background(),
 				&broker.PublishRequest{
 					Channel: channel,
-					Payload: payload,
+					Content: content,
 				},
 			)
 			if err != nil {

@@ -67,9 +67,9 @@ func main() {
 
 	var offset event.Offset = 1
 	if startOffset == "0" {
-		offset = 0
+		offset = event.Offset_OFFSET_BEGINNING
 	} else if startOffset == "1" {
-		offset = 1
+		offset = event.Offset_OFFSET_LATEST
 	} else {
 		log.Fatal("fatal: invalid offset")
 	}
@@ -103,15 +103,15 @@ func main() {
 				cancel()
 				return
 			} else if err == nil {
-				fmt.Println(">", message.Payload)
+				fmt.Println(">", string(message.GetContent()))
 			}
 
 			if err != nil {
-				log.Error(
-					"error: failed to receive message",
+				cancel()
+				log.Fatal(
+					"fatal: failed to receive message",
 					zap.Error(err),
 				)
-				panic(err)
 			}
 		}
 	}()

@@ -4,6 +4,7 @@ package broker
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -46,11 +47,15 @@ func (s *Service) subscribe(ctx context.Context, sub *event.Subscriber, offset e
 	)
 
 	// Read messages from the storage layer and send them to the subscriber
-	var currentOffset int64 = 0
-	if offset == event.Offset_BEGINNING {
+	var currentOffset int64
+	switch offset {
+	case event.Offset_OFFSET_BEGINNING:
 		currentOffset = 0
-	} else if offset == event.Offset_LATEST {
+	case event.Offset_OFFSET_LATEST:
 		currentOffset = -1
+	default:
+		fmt.Println("Invalid offset", offset)
+		return status.Error(codes.InvalidArgument, "invalid offset")
 	}
 
 	go func() {
@@ -117,22 +122,11 @@ func (s *Server) Subscribe(req *broker.SubscribeRequest, stream broker.BrokerSer
 	msgChan := make(chan *event.Message)
 	var closeOnce sync.Once
 
-	// Subscribe the client
-	if err := s.srv.subscribe(
-		stream.Context(),
-		sub,
-		input.offset,
-		input.pullInterval,
-		channel(input.channel),
-		msgChan,
-	); err != nil {
-		return status.Error(codes.Unavailable, "failed to subscribe")
-	}
-
+	// Defer the unsubscription and closing of the channel
 	defer func() {
 		// Unsubscribe when the stream ends
-		s.logger.Info(
-			"info: unsubscribing client",
+		s.logger.Warn(
+			"warn: unsubscribing client",
 			zap.String("id", sub.GetId()),
 			zap.String("ip", sub.GetIp()),
 			zap.String("channel", input.channel),
@@ -142,6 +136,25 @@ func (s *Server) Subscribe(req *broker.SubscribeRequest, stream broker.BrokerSer
 			close(msgChan)
 		})
 	}()
+
+	// Subscribe the client to the channel
+	if err := s.srv.subscribe(
+		stream.Context(),
+		sub,
+		input.offset,
+		input.pullInterval,
+		channel(input.channel),
+		msgChan,
+	); err != nil {
+		s.logger.Error(
+			"error: failed to subscribe",
+			zap.String("ip", ip),
+			zap.String("id", sub.GetId()),
+			zap.String("channel", input.channel),
+			zap.Error(err),
+		)
+		return status.Error(codes.Unavailable, "failed to subscribe")
+	}
 
 	// Stream the messages
 	for {

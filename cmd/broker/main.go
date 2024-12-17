@@ -16,6 +16,7 @@ import (
 	"github.com/hitesh22rana/mq/internal/logger"
 	"github.com/hitesh22rana/mq/pkg/broker"
 	"github.com/hitesh22rana/mq/pkg/storage"
+	"github.com/hitesh22rana/mq/pkg/utils"
 )
 
 func main() {
@@ -32,13 +33,30 @@ func main() {
 	}
 
 	// Create storage service
-	memoryStorage := storage.NewMemoryStorage(log, cfg.Storage.MemoryStorageBatchSize)
+	memoryStorage := storage.NewMemoryStorage(
+		log,
+		&storage.MemoryStorageOptions{
+			BatchSize: cfg.Storage.MemoryStorageBatchSize,
+		},
+	)
 
 	// Create broker service
-	srv := broker.NewService(log, memoryStorage)
+	srv := broker.NewService(
+		log,
+		&broker.ServiceOptions{
+			Storage: memoryStorage,
+		},
+	)
 
 	// Create broker server
-	server := broker.NewServer(log, srv)
+	server := broker.NewServer(
+		log,
+		&broker.ServerOptions{
+			Validator: utils.NewValidator(),
+			Generator: utils.NewGenerator(),
+			Service:   srv,
+		},
+	)
 
 	// Create TCP listener
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.BrokerPort))

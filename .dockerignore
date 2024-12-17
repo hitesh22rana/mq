@@ -1,0 +1,26 @@
+# Exclude "build-time" ignore files.
+.dockerignore
+
+# Exclude git history and configuration.
+.gitignore
+
+# Exclude the Dockerfile.
+Dockerfile
+
+# Exclude .env files.
+.env.*
+
+# Exclude .git files.
+.git
+
+# Exclude .idea files.
+.idea
+
+# Exclude .vscode files.
+.vscode
+
+# Exclude bin files.
+bin
+
+# Exclude .md files.
+*.md

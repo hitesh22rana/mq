@@ -9,6 +9,11 @@ import (
 	"go.uber.org/zap"
 )
 
+// MemoryStorageOptions represents the options for the MemoryStorage
+type MemoryStorageOptions struct {
+	BatchSize int
+}
+
 // MemoryStorage is an in-memory implementation of the Storage interface
 type MemoryStorage struct {
 	mu        sync.RWMutex
@@ -18,11 +23,11 @@ type MemoryStorage struct {
 }
 
 // NewMemoryStorage initializes a new MemoryStorage instance
-func NewMemoryStorage(logger *zap.Logger, batchSize int) *MemoryStorage {
+func NewMemoryStorage(logger *zap.Logger, options *MemoryStorageOptions) *MemoryStorage {
 	return &MemoryStorage{
 		mu:        sync.RWMutex{},
 		logger:    logger,
-		batchSize: batchSize,
+		batchSize: options.BatchSize,
 		data:      make(map[string][]interface{}),
 	}
 }

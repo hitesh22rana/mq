@@ -9,8 +9,8 @@ option go_package = "github.com/hitesh22rana/mq/pkg/proto/event;event";
 // Message represents a message sent to consumers
 message Message {
   string id         = 1;  // Unique identifier for the message
-  string payload    = 2;  // The message payload
-  int64 created_at  = 3;  // The timestamp of the message
+  bytes content     = 2;  // The message content
+  int64 created_at = 3;  // The timestamp of the message
 }
 
 // Subscriber represents a subscriber to a channel
@@ -21,6 +21,7 @@ message Subscriber {
 
 // Offset represents the offset of a message in a channel
 enum Offset {
-  BEGINNING = 0;  // Start consuming messages from the beginning
-  LATEST    = 1;  // Start consuming messages from the latest
+  OFFSET_UNKNOWN   = 0;  // Invalid offset
+  OFFSET_BEGINNING = 1;  // Start consuming messages from the beginning
+  OFFSET_LATEST    = 2;  // Start consuming messages from the latest
 }

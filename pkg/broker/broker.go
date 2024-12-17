@@ -50,12 +50,17 @@ type Service struct {
 	channelToSubscribers map[channel]map[*event.Subscriber]struct{}
 }
 
+// ServiceOptions represents the options for the broker service
+type ServiceOptions struct {
+	Storage storage.Storage
+}
+
 // NewService returns a new broker service
-func NewService(logger *zap.Logger, storage storage.Storage) *Service {
+func NewService(logger *zap.Logger, options *ServiceOptions) *Service {
 	return &Service{
 		mu:                   sync.RWMutex{},
 		logger:               logger,
-		storage:              storage,
+		storage:              options.Storage,
 		channelToSubscribers: make(map[channel]map[*event.Subscriber]struct{}),
 	}
 }
@@ -68,12 +73,19 @@ type Server struct {
 	srv       Broker
 }
 
+// ServerOptions represents the options for the broker server
+type ServerOptions struct {
+	Validator utils.Validator
+	Generator utils.Generator
+	Service   Broker
+}
+
 // NewServer returns a new broker server
-func NewServer(logger *zap.Logger, srv *Service) *Server {
+func NewServer(logger *zap.Logger, options *ServerOptions) *Server {
 	return &Server{
 		logger:    logger,
-		validator: utils.NewValidator(),
-		generator: utils.NewGenerator(),
-		srv:       srv,
+		validator: options.Validator,
+		generator: options.Generator,
+		srv:       options.Service,
 	}
 }
