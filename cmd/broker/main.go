@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"os"
 	"os/signal"
@@ -40,9 +41,13 @@ func main() {
 	server := broker.NewServer(log, srv)
 
 	// Create TCP listener
-	listener, err := net.Listen("tcp", cfg.BrokerPort)
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.BrokerPort))
 	if err != nil {
-		log.Fatal("failed to listen", zap.Error(err))
+		log.Fatal(
+			"fatal: failed to listen",
+			zap.Int("port", cfg.BrokerPort),
+			zap.Error(err),
+		)
 	}
 
 	// Create gRPC server
@@ -50,9 +55,15 @@ func main() {
 
 	// Start the broker server in a separate goroutine
 	go func() {
-		log.Info("Broker server started", zap.String("port", cfg.BrokerPort))
+		log.Info(
+			"info: broker server started",
+			zap.Int("port", cfg.BrokerPort),
+		)
 		if err := grpcServer.Serve(listener); err != nil {
-			log.Fatal("failed to serve", zap.Error(err))
+			log.Fatal(
+				"fatal: failed to serve",
+				zap.Error(err),
+			)
 		}
 	}()
 
@@ -60,10 +71,13 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Info("shutting down Broker server...")
+	log.Info("info: shutting down broker server...")
 
 	// Create a context with a timeout for the graceful shutdown
-	ctx, cancel := context.WithTimeout(context.Background(), cfg.Broker.BrokerGracefulShutdownTimeout)
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		cfg.Broker.BrokerGracefulShutdownTimeout,
+	)
 	defer cancel()
 
 	// Gracefully stop the broker server with timeout
@@ -75,9 +89,9 @@ func main() {
 
 	select {
 	case <-done:
-		log.Info("server stopped gracefully")
+		log.Info("info: server stopped gracefully")
 	case <-ctx.Done():
-		log.Warn("server shutdown timed out, forcing stop")
+		log.Warn("warn: server shutdown timed out, forcing stop")
 		grpcServer.Stop()
 	}
 }

@@ -10,28 +10,38 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hitesh22rana/mq/pkg/proto/broker"
+	"github.com/hitesh22rana/mq/pkg/proto/event"
 )
 
 // publish publishes a message to the specified channel
-func (s *Service) publish(ctx context.Context, ch channel, msg *message) error {
+func (s *Service) publish(ctx context.Context, ch channel, msg *event.Message) error {
 	_channel := string(ch)
 
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	if !s.storage.ChannelExists(_channel) {
-		s.logger.Error("error: cannot publish to non-existent channel", zap.String("channel", _channel))
+		s.logger.Error(
+			"error: cannot publish to non-existent channel",
+			zap.String("channel", _channel),
+		)
 		return ErrChannelDoesNotExist
 	}
 
 	// Store the message in the storage layer
-	_, err := s.storage.SaveMessage(_channel, msg)
-	if err != nil {
-		s.logger.Error("error: failed to save message", zap.String("channel", _channel), zap.Error(err))
+	if _, err := s.storage.SaveMessage(_channel, msg); err != nil {
+		s.logger.Error(
+			"error: failed to save message",
+			zap.String("channel", _channel),
+			zap.Error(err),
+		)
 		return ErrFailedToSaveMessage
 	}
 
-	s.logger.Info("message published", zap.String("channel", _channel))
+	s.logger.Info(
+		"info: message published",
+		zap.String("channel", _channel),
+	)
 	return nil
 }
 
@@ -56,10 +66,10 @@ func (s *Server) Publish(ctx context.Context, req *broker.PublishRequest) (*brok
 	if err := s.srv.publish(
 		ctx,
 		channel(input.channel),
-		&message{
-			id:        s.generator.GetUniqueMessageID(),
-			payload:   input.payload,
-			timeStamp: s.generator.GetCurrentTimestamp(),
+		&event.Message{
+			Id:        s.generator.GetUniqueMessageID(),
+			Payload:   input.payload,
+			CreatedAt: s.generator.GetCurrentTimestamp(),
 		}); err != nil {
 		return nil, status.Error(codes.Unavailable, "failed to publish message")
 	}

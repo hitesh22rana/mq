@@ -20,8 +20,8 @@ import (
 
 	"github.com/hitesh22rana/mq/internal/config"
 	"github.com/hitesh22rana/mq/internal/logger"
-	pb "github.com/hitesh22rana/mq/pkg/proto/broker"
-	event "github.com/hitesh22rana/mq/pkg/proto/event"
+	"github.com/hitesh22rana/mq/pkg/proto/broker"
+	"github.com/hitesh22rana/mq/pkg/proto/event"
 )
 
 func main() {
@@ -39,15 +39,20 @@ func main() {
 
 	// Create a new gRPC client
 	conn, err := grpc.NewClient(
-		cfg.BrokerURL,
+		fmt.Sprintf("%s:%d", cfg.BrokerHost, cfg.BrokerPort),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
-		log.Fatal("failed to create client", zap.Error(err))
+		log.Fatal(
+			"fatal: failed to create client",
+			zap.String("host", cfg.BrokerHost),
+			zap.Int("port", cfg.BrokerPort),
+			zap.Error(err),
+		)
 	}
 	defer conn.Close()
-	client := pb.NewBrokerServiceClient(conn)
-	log.Info("Subscriber client started successfully")
+	client := broker.NewBrokerServiceClient(conn)
+	log.Info("info: subscriber client started successfully")
 
 	// Create a new stream
 	reader := bufio.NewReader(os.Stdin)
@@ -66,7 +71,7 @@ func main() {
 	} else if startOffset == "1" {
 		offset = 1
 	} else {
-		log.Fatal("invalid offset")
+		log.Fatal("fatal: invalid offset")
 	}
 
 	// Create a new context
@@ -74,13 +79,16 @@ func main() {
 	defer cancel()
 
 	// Subscribe to the channel
-	stream, err := client.Subscribe(ctx, &pb.SubscribeRequest{
+	stream, err := client.Subscribe(ctx, &broker.SubscribeRequest{
 		Channel:      channel,
 		Offset:       offset,
 		PullInterval: cfg.Subscriber.DataPullingInterval,
 	})
 	if err != nil {
-		log.Fatal("failed to subscribe", zap.Error(err))
+		log.Fatal(
+			"fatal: failed to subscribe",
+			zap.Error(err),
+		)
 	}
 
 	quit := make(chan os.Signal, 1)
@@ -99,7 +107,10 @@ func main() {
 			}
 
 			if err != nil {
-				log.Error("failed to receive message", zap.Error(err))
+				log.Error(
+					"error: failed to receive message",
+					zap.Error(err),
+				)
 				panic(err)
 			}
 		}

@@ -104,6 +104,12 @@ Alternatively, install [Git for Windows](https://gitforwindows.org/), which incl
 
 ## Building the Project
 
+Copy the sample environment file to `.env`:
+
+```bash
+cp .env.sample .env
+```
+
 Clone the repository:
 ```bash
 git clone https://github.com/hitesh22rana/mq.git
@@ -114,7 +120,7 @@ Generate the protobuf code and build the binaries using the provided
 `Makefile`:
 ```bash
 make build-broker
-make build-producer
+make build-publisher
 make build-subscriber
 ```
 
@@ -129,12 +135,12 @@ Start the broker server:
 make broker
 ```
 
-The broker will start listening on port `50051`.
+The broker will start listening on the specified port (default:`50051`).
 
-## Running the Producer
-In a new terminal window, run the producer:
+## Running the Publisher
+In a new terminal window, run the publisher:
 ```bash
-make producer
+make publisher
 ```
 
 Follow the prompts:
@@ -162,9 +168,9 @@ Follow the prompts:
     make broker
     ```
 
-2. **Start the Producer** (In another terminal):
+2. **Start the Publisher** (In another terminal):
     ```bash
-    make producer
+    make publisher
     ```
 - Enter the channel name (e.g., `my-channel`).
 - Type messages to send.
@@ -179,9 +185,9 @@ Follow the prompts:
 
 ## Notes
 - The subscriber will receive all the messages published to that channel.
-- Ensure the broker is running before starting the producer and subscriber.
-- The producer and subscriber must use the same channel name to communicate.
-- Press Ctrl+C to exit the producer or subscriber.
+- Ensure the broker is running before starting the publisher and subscriber.
+- The publisher and subscriber must use the same channel name to communicate.
+- Press Ctrl+C to exit the publisher or subscriber.
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](https://github.com/hitesh22rana/mq/blob/main/LICENSE) file for details.

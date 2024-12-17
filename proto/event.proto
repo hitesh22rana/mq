@@ -10,7 +10,13 @@ option go_package = "github.com/hitesh22rana/mq/pkg/proto/event;event";
 message Message {
   string id         = 1;  // Unique identifier for the message
   string payload    = 2;  // The message payload
-  int64 timestamp   = 3;  // Unix timestamp in milliseconds
+  int64 created_at  = 3;  // The timestamp of the message
+}
+
+// Subscriber represents a subscriber to a channel
+message Subscriber {
+  string id = 1; // Unique identifier for the subscriber
+  string ip = 2; // IP address of the subscriber
 }
 
 // Offset represents the offset of a message in a channel

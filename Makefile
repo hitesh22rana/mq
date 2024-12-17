@@ -20,24 +20,24 @@ generate-proto: dependencies
 build-broker: generate-proto
 	@go build -o bin/broker cmd/broker/main.go
 
-.PHONY: build-producer
-build-producer: generate-proto
-	@go build -o bin/producer cmd/producer/main.go
+.PHONY: build-publisher
+build-publisher: generate-proto
+	@go build -o bin/publisher cmd/publisher/main.go
 
 .PHONY: build-subscriber
 build-subscriber: generate-proto
 	@go build -o bin/subscriber cmd/subscriber/main.go
 
 .PHONY: build-all
-build-all: build-broker build-producer build-subscriber
+build-all: build-broker build-publisher build-subscriber
 
 .PHONY: broker
 broker: build-broker
 	@./bin/broker
 
-.PHONY: producer
-producer: build-producer
-	@./bin/producer
+.PHONY: publisher
+publisher: build-publisher
+	@./bin/publisher
 
 .PHONY: subscriber
 subscriber: build-subscriber

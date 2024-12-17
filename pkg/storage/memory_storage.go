@@ -31,7 +31,10 @@ func NewMemoryStorage(logger *zap.Logger, batchSize int) *MemoryStorage {
 func (m *MemoryStorage) SaveMessage(channel string, message interface{}) (int64, error) {
 	// Check if the channel exists
 	if !m.ChannelExists(channel) {
-		m.logger.Info("channel does not exist", zap.String("channel", channel))
+		m.logger.Info(
+			"info: channel does not exist",
+			zap.String("channel", channel),
+		)
 
 		// Create a new channel
 		if err := m.CreateChannel(channel); err != nil {
@@ -60,7 +63,10 @@ func (m *MemoryStorage) GetMessages(channel string, offset int64) ([]interface{}
 
 	messages, exists := m.data[channel]
 	if !exists {
-		m.logger.Info("channel does not exist", zap.String("channel", channel))
+		m.logger.Info(
+			"info: channel does not exist",
+			zap.String("channel", channel),
+		)
 		return nil, 0, fmt.Errorf("channel '%s' does not exist", channel)
 	}
 
@@ -89,7 +95,10 @@ func (m *MemoryStorage) GetMessages(channel string, offset int64) ([]interface{}
 // CreateChannel creates a new channel
 func (m *MemoryStorage) CreateChannel(channel string) error {
 	if m.ChannelExists(channel) {
-		m.logger.Info("channel already exists", zap.String("channel", channel))
+		m.logger.Info(
+			"info: channel already exists",
+			zap.String("channel", channel),
+		)
 		return fmt.Errorf("channel '%s' already exists", channel)
 	}
 
@@ -112,7 +121,10 @@ func (m *MemoryStorage) ChannelExists(channel string) bool {
 // DeleteChannel deletes an existing channel
 func (m *MemoryStorage) DeleteChannel(channel string) error {
 	if !m.ChannelExists(channel) {
-		m.logger.Info("channel does not exist", zap.String("channel", channel))
+		m.logger.Info(
+			"info: channel does not exist",
+			zap.String("channel", channel),
+		)
 		return fmt.Errorf("channel '%s' does not exist", channel)
 	}
 

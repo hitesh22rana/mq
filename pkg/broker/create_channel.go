@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	broker "github.com/hitesh22rana/mq/pkg/proto/broker"
+	"github.com/hitesh22rana/mq/pkg/proto/broker"
 )
 
 // createChannel creates a new channel, if it doesn't already exist else joins the existing channel
@@ -21,16 +21,27 @@ func (s *Service) createChannel(ctx context.Context, channel channel) error {
 
 	// Check if the channel already exists, if it does return immediately
 	if s.storage.ChannelExists(_channel) {
-		s.logger.Warn("warn: channel already exists", zap.String("channel", _channel))
+		s.logger.Warn(
+			"warn: channel already exists",
+			zap.String("channel", _channel),
+		)
 		return nil
 	}
 
 	// Create a new channel in the storage
 	if err := s.storage.CreateChannel(_channel); err != nil {
-		s.logger.Error("error: failed to create channel", zap.String("channel", _channel), zap.Error(err))
+		s.logger.Error(
+			"error: failed to create channel",
+			zap.String("channel", _channel),
+			zap.Error(err),
+		)
+		return ErrUnableToCreateChannel
 	}
 
-	s.logger.Info("channel created", zap.String("channel", _channel))
+	s.logger.Info(
+		"info: channel created",
+		zap.String("channel", _channel),
+	)
 
 	return nil
 }
@@ -52,7 +63,7 @@ func (s *Server) CreateChannel(ctx context.Context, req *broker.CreateChannelReq
 
 	// Create a new channel
 	if err := s.srv.createChannel(ctx, channel(input.channel)); err != nil {
-		return nil, status.Error(codes.AlreadyExists, "channel already exists")
+		return nil, status.Error(codes.Internal, "unable to create channel")
 	}
 
 	return &broker.CreateChannelResponse{}, nil

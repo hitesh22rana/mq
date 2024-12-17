@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/reflection"
 
-	broker "github.com/hitesh22rana/mq/pkg/proto/broker"
+	"github.com/hitesh22rana/mq/pkg/proto/broker"
 )
 
 type contextKey string
