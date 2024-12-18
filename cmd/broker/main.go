@@ -17,6 +17,7 @@ import (
 	"github.com/hitesh22rana/mq/pkg/broker"
 	"github.com/hitesh22rana/mq/pkg/storage"
 	"github.com/hitesh22rana/mq/pkg/utils"
+	// "github.com/rosedblabs/wal"
 )
 
 func main() {
@@ -31,6 +32,21 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	// Create WAL logger
+	// wal, err := wal.Open(wal.Options{
+	// 	DirPath:        cfg.Wal.WalDirPath,
+	// 	SegmentSize:    cfg.Wal.WalSegmentSize,
+	// 	SegmentFileExt: cfg.Wal.WalSegmentFileExt,
+	// 	Sync:           cfg.Wal.WalSync,
+	// 	BytesPerSync:   cfg.WalBytesPerSync,
+	// })
+	// if err != nil {
+	// 	log.Fatal(
+	// 		"fatal: failed to open WAL",
+	// 		zap.Error(err),
+	// 	)
+	// }
 
 	// Create storage service
 	memoryStorage := storage.NewMemoryStorage(

@@ -4,7 +4,6 @@ package broker
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -47,14 +46,14 @@ func (s *Service) subscribe(ctx context.Context, sub *event.Subscriber, offset e
 	)
 
 	// Read messages from the storage layer and send them to the subscriber
-	var currentOffset int64
+	var currentOffset uint64 = 0
+	isFromLatest := false
 	switch offset {
 	case event.Offset_OFFSET_BEGINNING:
-		currentOffset = 0
+		isFromLatest = false
 	case event.Offset_OFFSET_LATEST:
-		currentOffset = -1
+		isFromLatest = true
 	default:
-		fmt.Println("Invalid offset", offset)
 		return status.Error(codes.InvalidArgument, "invalid offset")
 	}
 
@@ -67,7 +66,7 @@ func (s *Service) subscribe(ctx context.Context, sub *event.Subscriber, offset e
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				messages, nextOffset, err := s.storage.GetMessages(_channel, currentOffset)
+				messages, nextOffset, err := s.storage.GetMessages(_channel, sub.GetId(), currentOffset, &isFromLatest)
 				if err == nil {
 					currentOffset = nextOffset + 1
 

@@ -13,6 +13,7 @@ const envPrefix = ""
 // Configuration represents the configuration of the application
 type Configuration struct {
 	Storage
+	Wal
 	Broker
 	GrpcServer
 	Publisher
@@ -25,6 +26,15 @@ type Storage struct {
 	StorageBatchSize uint64 `envconfig:"STORAGE_BATCH_SIZE" default:"500"`
 }
 
+// Wal represents the configuration for the Write-Ahead Log (WAL)
+type Wal struct {
+	WalDirPath        string `envconfig:"WAL_DIR_PATH" default:"/tmp"`
+	WalSegmentSize    int64  `envconfig:"WAL_SEGMENT_SIZE" default:"52428800"` // 50MB (5,24,28,800) bytes
+	WalSegmentFileExt string `envconfig:"WAL_SEGMENT_FILE_EXT" default:".wal"`
+	WalSync           bool   `envconfig:"WAL_SYNC" default:"false"`
+	WalBytesPerSync   uint32 `envconfig:"WAL_BYTES_PER_SYNC" default:"0"`
+}
+
 // Broker represents the configuration for the broker
 type Broker struct {
 	BrokerPort                    int           `envconfig:"BROKER_PORT" required:"true"`
@@ -34,7 +44,7 @@ type Broker struct {
 
 // GrpcServer represents the configuration for the gRPC server
 type GrpcServer struct {
-	GrpcServerMaxRecvMsgSize int `envconfig:"GRPC_SERVER_MAX_RECV_MSG_SIZE" default:"4194304"` // 4 MB (41,94,304)
+	GrpcServerMaxRecvMsgSize int `envconfig:"GRPC_SERVER_MAX_RECV_MSG_SIZE" default:"4194304"` // 4 MB (41,94,304) bytes
 }
 
 // Publisher represents the configuration for the publisher

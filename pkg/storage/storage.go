@@ -16,8 +16,8 @@ var (
 
 // Storage defines the interface for message storage mechanisms
 type Storage interface {
-	SaveMessage(string, interface{}) (int64, error)
-	GetMessages(string, int64) ([]interface{}, int64, error)
+	SaveMessage(string, interface{}) (uint64, error)
+	GetMessages(string, string, uint64, *bool) ([]interface{}, uint64, error)
 	CreateChannel(string) error
 	ChannelExists(string) bool
 	DeleteChannel(string) error
