@@ -3,8 +3,7 @@
 A high-performance, pull-based message queue broker built in Go using gRPC. Designed for efficient pub/sub messaging where clients pull data at their own pace with support for configurable data pull intervals.
 
 ## Features
-- gRPC-based communication
-- Pull-based communication model
+- Uses a pull-based communication model implemented using gRPC
 - Pub/Sub messaging pattern
 - Clients control their data consumption rate
 - Configurable data pull intervals
@@ -12,6 +11,7 @@ A high-performance, pull-based message queue broker built in Go using gRPC. Desi
 - Configurable batch size for optimized performance
 - Multiple channel support
 - In-memory message storage
+- Write-Ahead Logging (WAL) for data durability/persistance
 - Concurrent subscriber handling
 - Graceful connection management
 - Structured logging
@@ -25,6 +25,13 @@ A high-performance, pull-based message queue broker built in Go using gRPC. Desi
 ## Architecture
 
 In the pull-based architecture, subscribers actively request messages from the broker based on their capacity and desired data pull intervals. This allows clients to manage their own consumption rate and handle backpressure effectively.
+
+The broker implements **Write-Ahead Logging (WAL)** to enhance data durability and fault tolerance. All incoming messages are first written to a persistent log before being processed. This ensures that in the event of a crash or unexpected shutdown, messages can be recovered from the log, preventing data loss.
+
+### Benefits of WAL
+- **Data Durability:** Messages are preserved even if the broker crashes, as they can be replayed from the WAL upon restart.
+- **Fault Tolerance:** Enhances the reliability of the system by providing a recovery mechanism.
+- **Efficient Writes:** Sequential disk writes improve performance compared to random writes.
 
 ![Architecture](https://github.com/hitesh22rana/mq/blob/main/.github/images/architecture.png)
 
