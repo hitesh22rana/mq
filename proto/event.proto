@@ -25,3 +25,9 @@ enum Offset {
   OFFSET_BEGINNING = 1;  // Start consuming messages from the beginning
   OFFSET_LATEST    = 2;  // Start consuming messages from the latest
 }
+
+// WalEntry represents an entry in the write-ahead log
+message WalEntry {
+  string channel  = 1; // The channel the message was published to
+  Message message = 2; // The message
+}

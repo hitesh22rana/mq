@@ -23,12 +23,13 @@ type Configuration struct {
 
 // Storage represents the configuration for the storage mechanism
 type Storage struct {
-	StorageBatchSize uint64 `envconfig:"STORAGE_BATCH_SIZE" default:"500"`
+	StorageBatchSize     uint64 `envconfig:"STORAGE_BATCH_SIZE" default:"500"`
+	StorageSyncOnStartup bool   `envconfig:"STORAGE_SYNC_ON_STARTUP" default:"true"`
 }
 
 // Wal represents the configuration for the Write-Ahead Log (WAL)
 type Wal struct {
-	WalDirPath        string `envconfig:"WAL_DIR_PATH" default:"/tmp"`
+	WalDirPath        string `envconfig:"WAL_DIR_PATH" default:"./data"`
 	WalSegmentSize    int64  `envconfig:"WAL_SEGMENT_SIZE" default:"52428800"` // 50MB (5,24,28,800) bytes
 	WalSegmentFileExt string `envconfig:"WAL_SEGMENT_FILE_EXT" default:".wal"`
 	WalSync           bool   `envconfig:"WAL_SYNC" default:"false"`

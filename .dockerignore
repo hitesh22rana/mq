@@ -24,3 +24,6 @@ bin
 
 # Exclude .md files.
 *.md
+
+# Exclude /data directory.
+data/

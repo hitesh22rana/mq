@@ -17,7 +17,7 @@ import (
 	"github.com/hitesh22rana/mq/pkg/broker"
 	"github.com/hitesh22rana/mq/pkg/storage"
 	"github.com/hitesh22rana/mq/pkg/utils"
-	// "github.com/rosedblabs/wal"
+	"github.com/rosedblabs/wal"
 )
 
 func main() {
@@ -34,25 +34,27 @@ func main() {
 	}
 
 	// Create WAL logger
-	// wal, err := wal.Open(wal.Options{
-	// 	DirPath:        cfg.Wal.WalDirPath,
-	// 	SegmentSize:    cfg.Wal.WalSegmentSize,
-	// 	SegmentFileExt: cfg.Wal.WalSegmentFileExt,
-	// 	Sync:           cfg.Wal.WalSync,
-	// 	BytesPerSync:   cfg.WalBytesPerSync,
-	// })
-	// if err != nil {
-	// 	log.Fatal(
-	// 		"fatal: failed to open WAL",
-	// 		zap.Error(err),
-	// 	)
-	// }
+	wal, err := wal.Open(wal.Options{
+		DirPath:        cfg.Wal.WalDirPath,
+		SegmentSize:    cfg.Wal.WalSegmentSize,
+		SegmentFileExt: cfg.Wal.WalSegmentFileExt,
+		Sync:           cfg.Wal.WalSync,
+		BytesPerSync:   cfg.WalBytesPerSync,
+	})
+	if err != nil {
+		log.Fatal(
+			"fatal: failed to open WAL",
+			zap.Error(err),
+		)
+	}
 
 	// Create storage service
 	memoryStorage := storage.NewMemoryStorage(
 		log,
 		&storage.MemoryStorageOptions{
-			BatchSize: cfg.Storage.StorageBatchSize,
+			Wal:           wal,
+			BatchSize:     cfg.Storage.StorageBatchSize,
+			SyncOnStartup: cfg.Storage.StorageSyncOnStartup,
 		},
 	)
 
@@ -122,6 +124,7 @@ func main() {
 	// Gracefully stop the broker server with timeout
 	done := make(chan struct{})
 	go func() {
+		_ = wal.Sync()
 		grpcServer.GracefulStop()
 		close(done)
 	}()

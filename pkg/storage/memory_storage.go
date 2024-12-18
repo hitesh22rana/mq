@@ -4,9 +4,14 @@ package storage
 
 import (
 	"fmt"
+	"io"
 	"sync"
 
+	"github.com/rosedblabs/wal"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/proto"
+
+	"github.com/hitesh22rana/mq/pkg/proto/event"
 )
 
 // chunk represents a chunk of data
@@ -25,13 +30,16 @@ type chunkList struct {
 
 // MemoryStorageOptions represents the options for the MemoryStorage
 type MemoryStorageOptions struct {
-	BatchSize uint64
+	Wal           *wal.WAL
+	BatchSize     uint64
+	SyncOnStartup bool
 }
 
 // MemoryStorage is an in-memory implementation of the Storage interface
 type MemoryStorage struct {
 	mu                       sync.RWMutex
 	logger                   *zap.Logger
+	wal                      *wal.WAL
 	batchSize                uint64
 	data                     map[string]*chunkList
 	subscriberToChannelChunk map[string]map[string]*chunk
@@ -39,13 +47,88 @@ type MemoryStorage struct {
 
 // NewMemoryStorage initializes a new MemoryStorage instance
 func NewMemoryStorage(logger *zap.Logger, options *MemoryStorageOptions) *MemoryStorage {
-	return &MemoryStorage{
+	m := &MemoryStorage{
 		mu:                       sync.RWMutex{},
 		logger:                   logger,
+		wal:                      options.Wal,
 		batchSize:                options.BatchSize,
 		data:                     make(map[string]*chunkList),
 		subscriberToChannelChunk: make(map[string]map[string]*chunk),
 	}
+
+	if !options.SyncOnStartup {
+		return m
+	}
+
+	// Inform the user that the storage is being synced
+	m.logger.Info("info: syncing storage on startup, this may take a while")
+
+	// Load data from the Write-Ahead Log (WAL)
+	reader := m.wal.NewReader()
+	for {
+
+		data, _, err := reader.Next()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+
+			m.logger.Fatal(
+				"fatal: failed to read WAL",
+				zap.Error(err),
+			)
+		}
+
+		// Unmarshal the protobuf data
+		entry := &event.WalEntry{}
+		if err := proto.Unmarshal(data, entry); err != nil {
+			fmt.Println("error: failed to unmarshal data")
+			break
+		}
+
+		channel := entry.GetChannel()
+		message := entry.GetMessage()
+
+		// Check if the channel exists
+		if !m.ChannelExists(channel) {
+			// Create a new channel
+			if err := m.CreateChannel(channel); err != nil {
+				m.logger.Error(
+					"error: failed to create channel",
+					zap.String("channel", channel),
+					zap.Error(err),
+				)
+
+				break
+			}
+		}
+
+		// Get the list of messages in the channel
+		msgList := m.data[channel]
+
+		// Make a new chunk
+		chunk := &chunk{
+			data: message,
+			prev: nil,
+			next: nil,
+		}
+
+		// Append the message to the channel
+		if msgList.head == nil {
+			msgList.head = chunk
+			msgList.tail = chunk
+			msgList.len = 1
+		} else {
+			chunk.prev = msgList.tail
+			msgList.tail.next = chunk
+			msgList.tail = msgList.tail.next
+			msgList.len++
+		}
+	}
+
+	// Inform the user that the storage has been synced
+	m.logger.Info("info: storage synced successfully")
+	return m
 }
 
 // SaveMessage saves a message to the specified channel
@@ -68,6 +151,25 @@ func (m *MemoryStorage) SaveMessage(channel string, message interface{}) (uint64
 
 	// Get the list of messages in the channel
 	msgList := m.data[channel]
+
+	// Write the message to the Write-Ahead Log (WAL)
+	entry := &event.WalEntry{
+		Channel: channel,
+		Message: message.(*event.Message),
+	}
+
+	data, err := proto.Marshal(entry)
+	if err != nil {
+		m.logger.Error(
+			"error: failed to marshal data",
+			zap.Error(err),
+		)
+
+		return msgList.len, ErrInternal
+	}
+
+	// Write the data to the WAL
+	m.wal.Write(data)
 
 	// Make a new chunk
 	chunk := &chunk{
