@@ -36,7 +36,7 @@ func main() {
 	memoryStorage := storage.NewMemoryStorage(
 		log,
 		&storage.MemoryStorageOptions{
-			BatchSize: cfg.Storage.MemoryStorageBatchSize,
+			BatchSize: cfg.Storage.StorageBatchSize,
 		},
 	)
 
@@ -69,7 +69,12 @@ func main() {
 	}
 
 	// Create gRPC server
-	grpcServer := broker.NewGrpcServer(server)
+	grpcServer := broker.NewGrpcServer(
+		&broker.GrpcServerOptions{
+			MaxRecvMsgSize: cfg.GrpcServer.GrpcServerMaxRecvMsgSize,
+			Server:         server,
+		},
+	)
 
 	// Start the broker server in a separate goroutine
 	go func() {

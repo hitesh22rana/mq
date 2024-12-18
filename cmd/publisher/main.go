@@ -39,9 +39,9 @@ func main() {
 		fmt.Sprintf("%s:%d", cfg.BrokerHost, cfg.BrokerPort),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithKeepaliveParams(keepalive.ClientParameters{
-			Time:                cfg.Publisher.KeepAliveTime,
-			Timeout:             cfg.Publisher.KeepAliveTimeout,
-			PermitWithoutStream: true,
+			Time:                cfg.Publisher.PublisherKeepAliveTime,
+			Timeout:             cfg.Publisher.PublisherKeepAliveTimeout,
+			PermitWithoutStream: cfg.Publisher.PublisherPermitWithoutStream,
 		}),
 	)
 	if err != nil {

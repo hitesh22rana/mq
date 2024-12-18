@@ -11,14 +11,14 @@ import (
 
 // MemoryStorageOptions represents the options for the MemoryStorage
 type MemoryStorageOptions struct {
-	BatchSize int
+	BatchSize uint64
 }
 
 // MemoryStorage is an in-memory implementation of the Storage interface
 type MemoryStorage struct {
 	mu        sync.RWMutex
 	logger    *zap.Logger
-	batchSize int
+	batchSize uint64
 	data      map[string][]interface{}
 }
 
@@ -86,11 +86,11 @@ func (m *MemoryStorage) GetMessages(channel string, offset int64) ([]interface{}
 	}
 
 	// Limit the number of messages to be returned
-	var endOffset int
-	if int(offset)+m.batchSize > len(messages) {
-		endOffset = len(messages)
+	var endOffset uint64
+	if uint64(offset)+m.batchSize > uint64(len(messages)) {
+		endOffset = uint64(len(messages))
 	} else {
-		endOffset = int(offset) + m.batchSize
+		endOffset = uint64(offset) + m.batchSize
 	}
 
 	// Return the copy of the messages to prevent data mutation

@@ -22,11 +22,23 @@ type GrpcServer struct {
 	server *Server
 }
 
+// GrpcServerOptions contains the options for the gRPC server
+type GrpcServerOptions struct {
+	MaxRecvMsgSize int
+	Server         *Server
+}
+
 // NewGrpcServer returns a new gRPC server
-func NewGrpcServer(server *Server) *grpc.Server {
+func NewGrpcServer(options *GrpcServerOptions) *grpc.Server {
 	// Use the interceptor to log incoming gRPC requests
-	s := grpc.NewServer(grpc.UnaryInterceptor(UnaryIPInterceptor))
-	broker.RegisterBrokerServiceServer(s, &GrpcServer{server: server})
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(UnaryIPInterceptor),
+		grpc.MaxRecvMsgSize(options.MaxRecvMsgSize),
+	)
+	broker.RegisterBrokerServiceServer(
+		s,
+		&GrpcServer{server: options.Server},
+	)
 	reflection.Register(s)
 	return s
 }

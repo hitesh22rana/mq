@@ -82,7 +82,7 @@ func main() {
 	stream, err := client.Subscribe(ctx, &broker.SubscribeRequest{
 		Channel:      channel,
 		Offset:       offset,
-		PullInterval: cfg.Subscriber.DataPullingInterval,
+		PullInterval: cfg.Subscriber.SubscriberDataPullingInterval,
 	})
 	if err != nil {
 		log.Fatal(

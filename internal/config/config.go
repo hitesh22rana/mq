@@ -14,6 +14,7 @@ const envPrefix = ""
 type Configuration struct {
 	Storage
 	Broker
+	GrpcServer
 	Publisher
 	Subscriber
 	Environment
@@ -21,7 +22,7 @@ type Configuration struct {
 
 // Storage represents the configuration for the storage mechanism
 type Storage struct {
-	MemoryStorageBatchSize int `envconfig:"MEMORY_STORAGE_BATCH_SIZE" default:"500"`
+	StorageBatchSize uint64 `envconfig:"STORAGE_BATCH_SIZE" default:"500"`
 }
 
 // Broker represents the configuration for the broker
@@ -31,17 +32,22 @@ type Broker struct {
 	BrokerGracefulShutdownTimeout time.Duration `envconfig:"BROKER_GRACEFUL_SHUTDOWN_TIMEOUT" default:"5s"`
 }
 
+// GrpcServer represents the configuration for the gRPC server
+type GrpcServer struct {
+	GrpcServerMaxRecvMsgSize int `envconfig:"GRPC_SERVER_MAX_RECV_MSG_SIZE" default:"4194304"` // 4 MB (41,94,304)
+}
+
 // Publisher represents the configuration for the publisher
 type Publisher struct {
-	KeepAliveTime       time.Duration `envconfig:"KEEPALIVE_TIME" default:"10s"`
-	KeepAliveTimeout    time.Duration `envconfig:"KEEPALIVE_TIMEOUT" default:"5s"`
-	PermitWithoutStream bool          `envconfig:"PERMIT_WITHOUT_STREAM" default:"true"`
+	PublisherKeepAliveTime       time.Duration `envconfig:"PUBLISHER_KEEPALIVE_TIME" default:"10s"`
+	PublisherKeepAliveTimeout    time.Duration `envconfig:"PUBLISHER_KEEPALIVE_TIMEOUT" default:"5s"`
+	PublisherPermitWithoutStream bool          `envconfig:"PUBLISHER_PERMIT_WITHOUT_STREAM" default:"true"`
 }
 
 // Subscriber represents the configuration for the subscriber
 type Subscriber struct {
-	// DataPullingInterval is the interval at which the subscriber pulls data from the broker (in milliseconds)
-	DataPullingInterval uint64 `envconfig:"DATA_PULLING_INTERVAL" default:"100"`
+	// SubscriberDataPullingInterval is the interval at which the subscriber pulls data from the broker (in milliseconds)
+	SubscriberDataPullingInterval uint64 `envconfig:"SUBSCRIBER_DATA_PULLING_INTERVAL" default:"100"`
 }
 
 // Environment represents the environment configuration
