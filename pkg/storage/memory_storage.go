@@ -28,6 +28,20 @@ type chunkList struct {
 	len  uint64
 }
 
+func (cl *chunkList) appendChunk(chunk *chunk) {
+	// Append the message to the list
+	if cl.head == nil {
+		cl.head = chunk
+		cl.tail = chunk
+		cl.len = 1
+	} else {
+		chunk.prev = cl.tail
+		cl.tail.next = chunk
+		cl.tail = cl.tail.next
+		cl.len++
+	}
+}
+
 // MemoryStorageOptions represents the options for the MemoryStorage
 type MemoryStorageOptions struct {
 	Wal           *wal.WAL
@@ -106,24 +120,14 @@ func NewMemoryStorage(logger *zap.Logger, options *MemoryStorageOptions) *Memory
 		// Get the list of messages in the channel
 		msgList := m.data[channel]
 
-		// Make a new chunk
-		chunk := &chunk{
-			data: message,
-			prev: nil,
-			next: nil,
-		}
-
-		// Append the message to the channel
-		if msgList.head == nil {
-			msgList.head = chunk
-			msgList.tail = chunk
-			msgList.len = 1
-		} else {
-			chunk.prev = msgList.tail
-			msgList.tail.next = chunk
-			msgList.tail = msgList.tail.next
-			msgList.len++
-		}
+		// Make a new chunk and append it to the list
+		msgList.appendChunk(
+			&chunk{
+				data: message,
+				prev: nil,
+				next: nil,
+			},
+		)
 	}
 
 	// Inform the user that the storage has been synced
@@ -169,26 +173,23 @@ func (m *MemoryStorage) SaveMessage(channel string, message interface{}) (uint64
 	}
 
 	// Write the data to the WAL
-	m.wal.Write(data)
+	if _, err = m.wal.Write(data); err != nil {
+		m.logger.Error(
+			"error: failed to write to WAL",
+			zap.Error(err),
+		)
 
-	// Make a new chunk
-	chunk := &chunk{
-		data: message,
-		prev: nil,
-		next: nil,
+		return msgList.len, ErrInternal
 	}
 
-	// Append the message to the channel
-	if msgList.head == nil {
-		msgList.head = chunk
-		msgList.tail = chunk
-		msgList.len = 1
-	} else {
-		chunk.prev = msgList.tail
-		msgList.tail.next = chunk
-		msgList.tail = msgList.tail.next
-		msgList.len++
-	}
+	// Make a new chunk and append it to the list
+	msgList.appendChunk(
+		&chunk{
+			data: message,
+			prev: nil,
+			next: nil,
+		},
+	)
 
 	// Return the index of the message in the channel
 	return msgList.len, nil
