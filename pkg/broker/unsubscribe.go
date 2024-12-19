@@ -11,7 +11,11 @@ import (
 )
 
 // unsubscribe removes subscriber from the specified channel
-func (s *Service) unsubscribe(ctx context.Context, sub *event.Subscriber, channel channel) error {
+func (s *Service) unsubscribe(
+	ctx context.Context,
+	sub *event.Subscriber,
+	channel channel,
+) error {
 	// Check if the channel exists
 	if !s.storage.ChannelExists(string(channel)) {
 		s.logger.Error(
@@ -22,6 +26,9 @@ func (s *Service) unsubscribe(ctx context.Context, sub *event.Subscriber, channe
 		)
 		return ErrChannelDoesNotExist
 	}
+
+	// Remove the channel from the subscriber's map
+	s.storage.RemoveChannelFromSubscriberMap(string(channel), sub.GetId())
 
 	s.mu.Lock()
 	defer s.mu.Unlock()

@@ -10,7 +10,7 @@ option go_package = "github.com/hitesh22rana/mq/pkg/proto/event;event";
 message Message {
   string id         = 1;  // Unique identifier for the message
   bytes content     = 2;  // The message content
-  int64 created_at = 3;  // The timestamp of the message
+  int64 created_at  = 3;  // The timestamp of the message
 }
 
 // Subscriber represents a subscriber to a channel

@@ -20,5 +20,5 @@ type Storage interface {
 	GetMessages(string, string, uint64, *bool) ([]interface{}, uint64, error)
 	CreateChannel(string) error
 	ChannelExists(string) bool
-	DeleteChannel(string) error
+	RemoveChannelFromSubscriberMap(string, string)
 }

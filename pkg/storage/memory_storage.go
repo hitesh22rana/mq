@@ -28,6 +28,21 @@ type chunkList struct {
 	len  uint64
 }
 
+// appendChunk appends a chunk to the chunk list
+func (cl *chunkList) appendChunk(chunk *chunk) {
+	// Append the message to the list
+	if cl.head == nil {
+		cl.head = chunk
+		cl.tail = chunk
+		cl.len = 1
+	} else {
+		chunk.prev = cl.tail
+		cl.tail.next = chunk
+		cl.tail = cl.tail.next
+		cl.len++
+	}
+}
+
 // MemoryStorageOptions represents the options for the MemoryStorage
 type MemoryStorageOptions struct {
 	Wal           *wal.WAL
@@ -66,7 +81,6 @@ func NewMemoryStorage(logger *zap.Logger, options *MemoryStorageOptions) *Memory
 	// Load data from the Write-Ahead Log (WAL)
 	reader := m.wal.NewReader()
 	for {
-
 		data, _, err := reader.Next()
 		if err != nil {
 			if err == io.EOF {
@@ -82,48 +96,36 @@ func NewMemoryStorage(logger *zap.Logger, options *MemoryStorageOptions) *Memory
 		// Unmarshal the protobuf data
 		entry := &event.WalEntry{}
 		if err := proto.Unmarshal(data, entry); err != nil {
-			fmt.Println("error: failed to unmarshal data")
+			m.logger.Error(
+				"error: failed to unmarshal data",
+				zap.Error(err),
+			)
 			break
 		}
 
 		channel := entry.GetChannel()
 		message := entry.GetMessage()
 
-		// Check if the channel exists
+		// Create the channel if it does not exist
 		if !m.ChannelExists(channel) {
-			// Create a new channel
-			if err := m.CreateChannel(channel); err != nil {
-				m.logger.Error(
-					"error: failed to create channel",
-					zap.String("channel", channel),
-					zap.Error(err),
-				)
-
-				break
-			}
+			_ = m.CreateChannel(channel)
+			m.logger.Info(
+				"info: created channel",
+				zap.String("channel", channel),
+			)
 		}
 
 		// Get the list of messages in the channel
 		msgList := m.data[channel]
 
-		// Make a new chunk
-		chunk := &chunk{
-			data: message,
-			prev: nil,
-			next: nil,
-		}
-
-		// Append the message to the channel
-		if msgList.head == nil {
-			msgList.head = chunk
-			msgList.tail = chunk
-			msgList.len = 1
-		} else {
-			chunk.prev = msgList.tail
-			msgList.tail.next = chunk
-			msgList.tail = msgList.tail.next
-			msgList.len++
-		}
+		// Make a new chunk and append it to the list
+		msgList.appendChunk(
+			&chunk{
+				data: message,
+				prev: nil,
+				next: nil,
+			},
+		)
 	}
 
 	// Inform the user that the storage has been synced
@@ -132,18 +134,17 @@ func NewMemoryStorage(logger *zap.Logger, options *MemoryStorageOptions) *Memory
 }
 
 // SaveMessage saves a message to the specified channel
-func (m *MemoryStorage) SaveMessage(channel string, message interface{}) (uint64, error) {
-	// Check if the channel exists
+func (m *MemoryStorage) SaveMessage(
+	channel string,
+	message interface{},
+) (uint64, error) {
+	// Create the channel if it does not exist
 	if !m.ChannelExists(channel) {
+		_ = m.CreateChannel(channel)
 		m.logger.Info(
-			"info: channel does not exist",
+			"info: created channel",
 			zap.String("channel", channel),
 		)
-
-		// Create a new channel
-		if err := m.CreateChannel(channel); err != nil {
-			return 0, ErrInternal
-		}
 	}
 
 	m.mu.Lock()
@@ -169,40 +170,42 @@ func (m *MemoryStorage) SaveMessage(channel string, message interface{}) (uint64
 	}
 
 	// Write the data to the WAL
-	m.wal.Write(data)
+	if _, err = m.wal.Write(data); err != nil {
+		m.logger.Error(
+			"error: failed to write to WAL",
+			zap.Error(err),
+		)
 
-	// Make a new chunk
-	chunk := &chunk{
-		data: message,
-		prev: nil,
-		next: nil,
+		return msgList.len, ErrInternal
 	}
 
-	// Append the message to the channel
-	if msgList.head == nil {
-		msgList.head = chunk
-		msgList.tail = chunk
-		msgList.len = 1
-	} else {
-		chunk.prev = msgList.tail
-		msgList.tail.next = chunk
-		msgList.tail = msgList.tail.next
-		msgList.len++
-	}
+	// Make a new chunk and append it to the list
+	msgList.appendChunk(
+		&chunk{
+			data: message,
+			prev: nil,
+			next: nil,
+		},
+	)
 
 	// Return the index of the message in the channel
 	return msgList.len, nil
 }
 
 // GetMessages retrieves all messages from the specified channel
-func (m *MemoryStorage) GetMessages(channel string, subscriberID string, offset uint64, isFromLatest *bool) ([]interface{}, uint64, error) {
+func (m *MemoryStorage) GetMessages(
+	channel string,
+	subscriberID string,
+	offset uint64,
+	isFromLatest *bool,
+) ([]interface{}, uint64, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
 	messages, exists := m.data[channel]
 	if !exists {
-		m.logger.Info(
-			"info: channel does not exist",
+		m.logger.Error(
+			"error: channel does not exist",
 			zap.String("channel", channel),
 		)
 		return nil, 0, fmt.Errorf("channel '%s' does not exist", channel)
@@ -263,14 +266,6 @@ func (m *MemoryStorage) GetMessages(channel string, subscriberID string, offset 
 
 // CreateChannel creates a new channel
 func (m *MemoryStorage) CreateChannel(channel string) error {
-	if m.ChannelExists(channel) {
-		m.logger.Info(
-			"info: channel already exists",
-			zap.String("channel", channel),
-		)
-		return fmt.Errorf("channel '%s' already exists", channel)
-	}
-
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -292,24 +287,14 @@ func (m *MemoryStorage) ChannelExists(channel string) bool {
 	return exists
 }
 
-// DeleteChannel deletes an existing channel
-func (m *MemoryStorage) DeleteChannel(channel string) error {
-	if !m.ChannelExists(channel) {
-		m.logger.Info(
-			"info: channel does not exist",
-			zap.String("channel", channel),
-		)
-		return fmt.Errorf("channel '%s' does not exist", channel)
-	}
-
+// RemoveChannelFromSubscriberMap removes the channel from the subscriberToChannelChunk map
+func (m *MemoryStorage) RemoveChannelFromSubscriberMap(
+	channel string,
+	subscriberID string,
+) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	delete(m.data, channel)
 
 	// Remove the channel from the subscriberToChannelChunk map
-	for ch := range m.subscriberToChannelChunk[channel] {
-		delete(m.subscriberToChannelChunk[channel], ch)
-	}
-
-	return nil
+	delete(m.subscriberToChannelChunk[subscriberID], channel)
 }
