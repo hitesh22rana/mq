@@ -1,0 +1,19 @@
+services:
+  mq:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mq
+    environment:
+      - BROKER_PORT=50051
+      - BROKER_HOST=localhost
+      - ENVIRONMENT=production
+      - WAL_DIR_PATH=/var/lib/mq
+    volumes:
+      - data:/var/lib/mq
+    ports:
+      - "50051:50051"
+    container_name: mq
+
+volumes:
+  data:
