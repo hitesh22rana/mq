@@ -108,8 +108,24 @@ Alternatively, install [Git for Windows](https://gitforwindows.org/), which incl
 
 **Note**: If you prefer not to use `make`, you can manually run the commands specified in the [Makefile](https://github.com/hitesh22rana/mq/blob/main/Makefile).
 
+## Building and Running the Project with Docker
 
-## Building the Project
+You can run the MQ broker using `docker-compose.yaml` for a simplified setup.
+```bash
+docker-compose up
+```
+
+This command builds the image and starts the service as defined in the `docker-compose.yml` file.
+
+To stop the containers, press `Ctrl+C` or run:
+
+```bash
+docker-compose down
+```
+
+Now you can run the publisher and subscriber as before to interact with the broker.
+
+## Alternatively Building and running the project manually
 
 Copy the sample environment file to `.env`:
 
