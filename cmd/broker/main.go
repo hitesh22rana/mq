@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/rosedblabs/wal"
 	"go.uber.org/zap"
 
 	"github.com/hitesh22rana/mq/internal/config"
@@ -17,7 +18,6 @@ import (
 	"github.com/hitesh22rana/mq/pkg/broker"
 	"github.com/hitesh22rana/mq/pkg/storage"
 	"github.com/hitesh22rana/mq/pkg/utils"
-	"github.com/rosedblabs/wal"
 )
 
 func main() {
@@ -28,7 +28,7 @@ func main() {
 	}
 
 	// Create logger
-	log, err := logger.NewLogger(cfg.Env)
+	log, err := logger.NewLogger(cfg.Environment.Env)
 	if err != nil {
 		panic(err)
 	}
@@ -39,7 +39,7 @@ func main() {
 		SegmentSize:    cfg.Wal.WalSegmentSize,
 		SegmentFileExt: cfg.Wal.WalSegmentFileExt,
 		Sync:           cfg.Wal.WalSync,
-		BytesPerSync:   cfg.WalBytesPerSync,
+		BytesPerSync:   cfg.Wal.WalBytesPerSync,
 	})
 	if err != nil {
 		log.Fatal(
@@ -77,11 +77,11 @@ func main() {
 	)
 
 	// Create TCP listener
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.BrokerPort))
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.Broker.BrokerPort))
 	if err != nil {
 		log.Fatal(
 			"fatal: failed to listen",
-			zap.Int("port", cfg.BrokerPort),
+			zap.Int("port", cfg.Broker.BrokerPort),
 			zap.Error(err),
 		)
 	}
@@ -98,7 +98,7 @@ func main() {
 	go func() {
 		log.Info(
 			"info: broker server started",
-			zap.Int("port", cfg.BrokerPort),
+			zap.Int("port", cfg.Broker.BrokerPort),
 		)
 		if err := grpcServer.Serve(listener); err != nil {
 			log.Fatal(

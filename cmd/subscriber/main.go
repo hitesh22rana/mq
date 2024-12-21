@@ -32,21 +32,21 @@ func main() {
 	}
 
 	// Create logger
-	log, err := logger.NewLogger(cfg.Env)
+	log, err := logger.NewLogger(cfg.Environment.Env)
 	if err != nil {
 		panic(err)
 	}
 
 	// Create a new gRPC client
 	conn, err := grpc.NewClient(
-		fmt.Sprintf("%s:%d", cfg.BrokerHost, cfg.BrokerPort),
+		fmt.Sprintf("%s:%d", cfg.Broker.BrokerHost, cfg.Broker.BrokerPort),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
 		log.Fatal(
 			"fatal: failed to create client",
-			zap.String("host", cfg.BrokerHost),
-			zap.Int("port", cfg.BrokerPort),
+			zap.String("host", cfg.Broker.BrokerHost),
+			zap.Int("port", cfg.Broker.BrokerPort),
 			zap.Error(err),
 		)
 	}
