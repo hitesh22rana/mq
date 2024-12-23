@@ -1,7 +1,7 @@
 FROM golang:latest AS build
 
 # Set the Current Working Directory inside the container
-WORKDIR /broker
+WORKDIR /mq
 
 # Install protoc and required packages
 RUN apt-get update && apt-get install -y protobuf-compiler
@@ -21,23 +21,23 @@ RUN go mod download
 COPY . .
 
 # Compile the protocol buffer files and generate the Go files
-RUN rm -rf pkg/proto && mkdir -p pkg/proto && \
+RUN rm -rf .proto/ && mkdir -p .proto/go && \
     for file in proto/*.proto; do \
     base=$(basename $file); \
     name=${base%.*}; \
-    mkdir -p pkg/proto/$name; \
-    protoc --go_out=paths=source_relative:./pkg/proto/$name --go-grpc_out=paths=source_relative:./pkg/proto/$name \
+    mkdir -p .proto/go/$name; \
+    protoc --go_out=paths=source_relative:.proto/go/$name --go-grpc_out=paths=source_relative:.proto/go/$name \
     --proto_path=proto $file; \
     done
 
 # Build the Go app
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=$(go env GOARCH) go build -o /go/bin/broker cmd/broker/main.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=$(go env GOARCH) go build -o /go/bin/mq cmd/mq/main.go
 
 # Start a new stage from scratch
 FROM scratch
 
 # Copy the Pre-built binary file from the previous stage
-COPY --from=build /go/bin/broker /bin/broker
+COPY --from=build /go/bin/mq /bin/mq
 
 # Command to run the executable
-CMD ["/bin/broker"]
+CMD ["/bin/mq"]

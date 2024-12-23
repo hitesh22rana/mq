@@ -12,12 +12,11 @@ import (
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
 
-	"github.com/hitesh22rana/mq/pkg/proto/broker"
-	"github.com/hitesh22rana/mq/pkg/proto/event"
+	pb "github.com/hitesh22rana/mq/.proto/go/mq"
 )
 
 // subscribe add the subscriber to the specified channel
-func (s *Service) subscribe(ctx context.Context, sub *event.Subscriber, offset event.Offset, pullInterval uint64, ch channel, msgChan chan<- *event.Message) error {
+func (s *Service) subscribe(ctx context.Context, sub *pb.Subscriber, offset pb.Offset, pullInterval uint64, ch channel, msgChan chan<- *pb.Message) error {
 	_channel := string(ch)
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -33,7 +32,7 @@ func (s *Service) subscribe(ctx context.Context, sub *event.Subscriber, offset e
 
 	// Initialize the channel to subscribers map, if the channel does not exist
 	if _, exists := s.channelToSubscribers[ch]; !exists {
-		s.channelToSubscribers[ch] = make(map[*event.Subscriber]struct{}, 0)
+		s.channelToSubscribers[ch] = make(map[*pb.Subscriber]struct{}, 0)
 	}
 
 	// Add the subscriber to the channel
@@ -49,9 +48,9 @@ func (s *Service) subscribe(ctx context.Context, sub *event.Subscriber, offset e
 	var currentOffset uint64 = 0
 	isFromLatest := false
 	switch offset {
-	case event.Offset_OFFSET_BEGINNING:
+	case pb.Offset_OFFSET_BEGINNING:
 		isFromLatest = false
-	case event.Offset_OFFSET_LATEST:
+	case pb.Offset_OFFSET_LATEST:
 		isFromLatest = true
 	default:
 		return status.Error(codes.InvalidArgument, "invalid offset")
@@ -71,7 +70,7 @@ func (s *Service) subscribe(ctx context.Context, sub *event.Subscriber, offset e
 					currentOffset = nextOffset + 1
 
 					for _, msg := range messages {
-						msgChan <- msg.(*event.Message)
+						msgChan <- msg.(*pb.Message)
 					}
 				}
 			}
@@ -82,13 +81,13 @@ func (s *Service) subscribe(ctx context.Context, sub *event.Subscriber, offset e
 }
 
 type subscribeInput struct {
-	channel      string       `validate:"required"`
-	offset       event.Offset `validate:"required eq=0|eq=1"`
-	pullInterval uint64       `validate:"required gte=0"`
+	channel      string    `validate:"required"`
+	offset       pb.Offset `validate:"required eq=0|eq=1"`
+	pullInterval uint64    `validate:"required gte=0"`
 }
 
 // gRPC implementation of the Subscribe method
-func (s *Server) Subscribe(req *broker.SubscribeRequest, stream broker.BrokerService_SubscribeServer) error {
+func (s *Server) Subscribe(req *pb.SubscribeRequest, stream pb.MQService_SubscribeServer) error {
 	input := &subscribeInput{
 		channel:      req.GetChannel(),
 		offset:       req.GetOffset(),
@@ -112,13 +111,13 @@ func (s *Server) Subscribe(req *broker.SubscribeRequest, stream broker.BrokerSer
 	}
 
 	// Create a new subscriber
-	sub := &event.Subscriber{
+	sub := &pb.Subscriber{
 		Id: s.generator.GetUniqueSubscriberID(),
 		Ip: ip,
 	}
 
 	// Create a new message channel
-	msgChan := make(chan *event.Message)
+	msgChan := make(chan *pb.Message)
 	var closeOnce sync.Once
 
 	// Defer the unsubscription and closing of the channel

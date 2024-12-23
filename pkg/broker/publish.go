@@ -9,12 +9,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/hitesh22rana/mq/pkg/proto/broker"
-	"github.com/hitesh22rana/mq/pkg/proto/event"
+	pb "github.com/hitesh22rana/mq/.proto/go/mq"
 )
 
 // publish publishes a message to the specified channel
-func (s *Service) publish(ctx context.Context, ch channel, msg *event.Message) error {
+func (s *Service) publish(ctx context.Context, ch channel, msg *pb.Message) error {
 	_channel := string(ch)
 
 	s.mu.RLock()
@@ -51,7 +50,7 @@ type publishInput struct {
 }
 
 // gRPC implementation of the Publish method
-func (s *Server) Publish(ctx context.Context, req *broker.PublishRequest) (*broker.PublishResponse, error) {
+func (s *Server) Publish(ctx context.Context, req *pb.PublishRequest) (*pb.PublishResponse, error) {
 	input := &publishInput{
 		channel: req.GetChannel(),
 		Content: []byte(req.Content),
@@ -66,7 +65,7 @@ func (s *Server) Publish(ctx context.Context, req *broker.PublishRequest) (*brok
 	if err := s.srv.publish(
 		ctx,
 		channel(input.channel),
-		&event.Message{
+		&pb.Message{
 			Id:        s.generator.GetUniqueMessageID(),
 			Content:   input.Content,
 			CreatedAt: s.generator.GetCurrentTimestamp(),
@@ -74,5 +73,5 @@ func (s *Server) Publish(ctx context.Context, req *broker.PublishRequest) (*brok
 		return nil, status.Error(codes.Unavailable, "failed to publish message")
 	}
 
-	return &broker.PublishResponse{}, nil
+	return &pb.PublishResponse{}, nil
 }

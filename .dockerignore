@@ -27,3 +27,6 @@ bin
 
 # Exclude /data directory.
 data/
+
+# Exclude the .proto directory.
+.proto/

@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/hitesh22rana/mq/pkg/proto/broker"
+	pb "github.com/hitesh22rana/mq/.proto/go/mq"
 )
 
 // createChannel creates a new channel, if it doesn't already exist else joins the existing channel
@@ -51,7 +51,7 @@ type createChannelInput struct {
 }
 
 // gRPC implementation of the CreateChannel method
-func (s *Server) CreateChannel(ctx context.Context, req *broker.CreateChannelRequest) (*broker.CreateChannelResponse, error) {
+func (s *Server) CreateChannel(ctx context.Context, req *pb.CreateChannelRequest) (*pb.CreateChannelResponse, error) {
 	input := &createChannelInput{
 		channel: req.GetChannel(),
 	}
@@ -66,5 +66,5 @@ func (s *Server) CreateChannel(ctx context.Context, req *broker.CreateChannelReq
 		return nil, status.Error(codes.Internal, "unable to create channel")
 	}
 
-	return &broker.CreateChannelResponse{}, nil
+	return &pb.CreateChannelResponse{}, nil
 }
