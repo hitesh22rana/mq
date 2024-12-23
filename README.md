@@ -70,7 +70,7 @@ docker run \
     docker-compose down
     ```
 
-4. Now you can run the `publisher` and `subscriber` independently to interact with the `broker`.
+4. Now you can run the `publisher` and `subscriber` independently to interact with `mq`.
 
 ### 3. Alternatively building and running the project manually
 
@@ -154,7 +154,7 @@ docker run \
 
     - Generate the protobuf code and build the binaries using the provided `Makefile`:
         ```bash
-        make build-broker
+        make build-mq
         make build-publisher
         make build-subscriber
         ```
@@ -164,10 +164,10 @@ docker run \
         make build-all
         ```
 
-    ### Running the Broker
-    Start the broker server:
+    ### Running the MQ
+    Start the mq server:
     ```bash
-    make broker
+    make mq
     ```
 
     The broker will start listening on the specified port (default:`50051`).
@@ -198,9 +198,9 @@ docker run \
 
     ### Usage Example
 
-    1. **Start the Broker**
+    1. **Start the MQ Server**
         ```bash
-        make broker
+        make mq
         ```
 
     2. **Start the Publisher** (In another terminal):

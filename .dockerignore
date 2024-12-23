@@ -27,3 +27,6 @@ bin
 
 # Exclude /data directory.
 data/
+
+# Exclue the .gen directory.
+.gen/

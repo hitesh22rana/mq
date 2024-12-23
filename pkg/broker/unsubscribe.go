@@ -7,13 +7,13 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/hitesh22rana/mq/pkg/proto/event"
+	pb "github.com/hitesh22rana/mq/.gen/go/mq"
 )
 
 // unsubscribe removes subscriber from the specified channel
 func (s *Service) unsubscribe(
 	ctx context.Context,
-	sub *event.Subscriber,
+	sub *pb.Subscriber,
 	channel channel,
 ) error {
 	// Check if the channel exists
