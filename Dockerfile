@@ -21,12 +21,12 @@ RUN go mod download
 COPY . .
 
 # Compile the protocol buffer files and generate the Go files
-RUN rm -rf pkg/proto && mkdir -p pkg/proto && \
+RUN rm -rf .gen/ && mkdir -p .gen/go && \
     for file in proto/*.proto; do \
     base=$(basename $file); \
     name=${base%.*}; \
-    mkdir -p pkg/proto/$name; \
-    protoc --go_out=paths=source_relative:./pkg/proto/$name --go-grpc_out=paths=source_relative:./pkg/proto/$name \
+    mkdir -p .gen/go/$name; \
+    protoc --go_out=paths=source_relative:.gen/go/$name --go-grpc_out=paths=source_relative:.gen/go/$name \
     --proto_path=proto $file; \
     done
 

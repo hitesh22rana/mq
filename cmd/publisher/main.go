@@ -16,9 +16,9 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"
 
+	pb "github.com/hitesh22rana/mq/.gen/go/mq"
 	"github.com/hitesh22rana/mq/internal/config"
 	"github.com/hitesh22rana/mq/internal/logger"
-	"github.com/hitesh22rana/mq/pkg/proto/broker"
 )
 
 func main() {
@@ -54,7 +54,7 @@ func main() {
 	}
 	defer conn.Close()
 
-	client := broker.NewBrokerServiceClient(conn)
+	client := pb.NewBrokerServiceClient(conn)
 	log.Info("info: publisher client started successfully")
 
 	// Create a new stream
@@ -67,7 +67,7 @@ func main() {
 	// Create a new channel
 	if _, err = client.CreateChannel(
 		context.Background(),
-		&broker.CreateChannelRequest{
+		&pb.CreateChannelRequest{
 			Channel: channel,
 		},
 	); err != nil {
@@ -91,7 +91,7 @@ func main() {
 			content = content[:len(content)-1] // Remove the newline character
 			_, err := client.Publish(
 				context.Background(),
-				&broker.PublishRequest{
+				&pb.PublishRequest{
 					Channel: channel,
 					Content: content,
 				},

@@ -18,10 +18,9 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 
+	pb "github.com/hitesh22rana/mq/.gen/go/mq"
 	"github.com/hitesh22rana/mq/internal/config"
 	"github.com/hitesh22rana/mq/internal/logger"
-	"github.com/hitesh22rana/mq/pkg/proto/broker"
-	"github.com/hitesh22rana/mq/pkg/proto/event"
 )
 
 func main() {
@@ -51,7 +50,7 @@ func main() {
 		)
 	}
 	defer conn.Close()
-	client := broker.NewBrokerServiceClient(conn)
+	client := pb.NewBrokerServiceClient(conn)
 	log.Info("info: subscriber client started successfully")
 
 	// Create a new stream
@@ -65,11 +64,11 @@ func main() {
 	startOffset, _ := reader.ReadString('\n')
 	startOffset = strings.Replace(startOffset, "\n", "", -1)
 
-	var offset event.Offset = 1
+	var offset pb.Offset = 1
 	if startOffset == "0" {
-		offset = event.Offset_OFFSET_BEGINNING
+		offset = pb.Offset_OFFSET_BEGINNING
 	} else if startOffset == "1" {
-		offset = event.Offset_OFFSET_LATEST
+		offset = pb.Offset_OFFSET_LATEST
 	} else {
 		log.Fatal("fatal: invalid offset")
 	}
@@ -79,7 +78,7 @@ func main() {
 	defer cancel()
 
 	// Subscribe to the channel
-	stream, err := client.Subscribe(ctx, &broker.SubscribeRequest{
+	stream, err := client.Subscribe(ctx, &pb.SubscribeRequest{
 		Channel:      channel,
 		Offset:       offset,
 		PullInterval: cfg.Subscriber.SubscriberDataPullingInterval,

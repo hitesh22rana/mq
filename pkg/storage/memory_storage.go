@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hitesh22rana/mq/pkg/proto/event"
+	pb "github.com/hitesh22rana/mq/.gen/go/mq"
 )
 
 // chunk represents a chunk of data
@@ -94,7 +94,7 @@ func NewMemoryStorage(logger *zap.Logger, options *MemoryStorageOptions) *Memory
 		}
 
 		// Unmarshal the protobuf data
-		entry := &event.WalEntry{}
+		entry := &pb.WalEntry{}
 		if err := proto.Unmarshal(data, entry); err != nil {
 			m.logger.Error(
 				"error: failed to unmarshal data",
@@ -154,9 +154,9 @@ func (m *MemoryStorage) SaveMessage(
 	msgList := m.data[channel]
 
 	// Write the message to the Write-Ahead Log (WAL)
-	entry := &event.WalEntry{
+	entry := &pb.WalEntry{
 		Channel: channel,
-		Message: message.(*event.Message),
+		Message: message.(*pb.Message),
 	}
 
 	data, err := proto.Marshal(entry)

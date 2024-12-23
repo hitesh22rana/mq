@@ -9,7 +9,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/hitesh22rana/mq/pkg/proto/event"
+	pb "github.com/hitesh22rana/mq/.gen/go/mq"
 	"github.com/hitesh22rana/mq/pkg/storage"
 	"github.com/hitesh22rana/mq/pkg/utils"
 )
@@ -34,9 +34,9 @@ var (
 // Broker defines the interface for the message broker
 type Broker interface {
 	createChannel(context.Context, channel) error
-	publish(context.Context, channel, *event.Message) error
-	subscribe(context.Context, *event.Subscriber, event.Offset, uint64, channel, chan<- *event.Message) error
-	unsubscribe(context.Context, *event.Subscriber, channel) error
+	publish(context.Context, channel, *pb.Message) error
+	subscribe(context.Context, *pb.Subscriber, pb.Offset, uint64, channel, chan<- *pb.Message) error
+	unsubscribe(context.Context, *pb.Subscriber, channel) error
 }
 
 // Channel represents a message channel
@@ -47,7 +47,7 @@ type Service struct {
 	mu                   sync.RWMutex
 	logger               *zap.Logger
 	storage              storage.Storage
-	channelToSubscribers map[channel]map[*event.Subscriber]struct{}
+	channelToSubscribers map[channel]map[*pb.Subscriber]struct{}
 }
 
 // ServiceOptions represents the options for the broker service
@@ -61,7 +61,7 @@ func NewService(logger *zap.Logger, options *ServiceOptions) *Service {
 		mu:                   sync.RWMutex{},
 		logger:               logger,
 		storage:              options.Storage,
-		channelToSubscribers: make(map[channel]map[*event.Subscriber]struct{}),
+		channelToSubscribers: make(map[channel]map[*pb.Subscriber]struct{}),
 	}
 }
 
