@@ -30,3 +30,6 @@ data/
 
 # Exclude the .proto directory.
 .proto/
+
+# Exclude the examples directory.
+examples/

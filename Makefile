@@ -20,25 +20,6 @@ dependencies: generate-proto-go
 build-mq: dependencies
 	@go build -o bin/mq cmd/mq/main.go
 
-.PHONY: build-publisher
-build-publisher: dependencies
-	@go build -o bin/publisher cmd/publisher/main.go
-
-.PHONY: build-subscriber
-build-subscriber: dependencies
-	@go build -o bin/subscriber cmd/subscriber/main.go
-
-.PHONY: build-all
-build-all: build-mq build-publisher build-subscriber
-
 .PHONY: mq
 mq: build-mq
 	@./bin/mq
-
-.PHONY: publisher
-publisher: build-publisher
-	@./bin/publisher
-
-.PHONY: subscriber
-subscriber: build-subscriber
-	@./bin/subscriber

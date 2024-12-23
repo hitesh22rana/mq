@@ -155,13 +155,6 @@ docker run \
     - Generate the protobuf code and build the binaries using the provided `Makefile`:
         ```bash
         make build-mq
-        make build-publisher
-        make build-subscriber
-        ```
-
-    - Alternatively, you can build all components at once:
-        ```bash
-        make build-all
         ```
 
     ### Running the MQ
@@ -172,51 +165,16 @@ docker run \
 
     The broker will start listening on the specified port (default:`50051`).
 
-    ### Running the Publisher
-    In a new terminal window, run the publisher:
-    ```bash
-    make publisher
-    ```
-
-    Follow the prompts:
-
-    - Enter the channel name you wish to publish messages to.
-    - Type your messages and press Enter to send them.
-    - Press `Ctrl+C` to exit.
-
-    ### Running the Subscriber
-    In another terminal window, run the subscriber:
-    ```bash
-    make subscriber
-    ```
-
-    Follow the prompts:
-
-    - Enter the channel name you wish to subscribe to (this channel should exist).
-    - The subscriber will receive all the messages published to that channel.
-    - Press `Ctrl+C` to exit.
-
     ### Usage Example
 
-    1. **Start the MQ Server**
+    1. Navigate to `examples` directory.
         ```bash
-        make mq
+        cd /examples
         ```
 
-    2. **Start the Publisher** (In another terminal):
-        ```bash
-        make publisher
-        ```
-    - Enter the channel name (e.g., `my-channel`).
-    - Type messages to send.
+    2. Start the Publisher and Subscriber from the provided languages examples (In another terminal).
 
-    3. **Start the Subscriber** (In a new terminal):
-        ```bash
-        make subscriber
-        ```
-    - Enter the same channel name (`my-channel`).
-
-    4. The subscriber terminal will display the messages received.
+    3. The subscriber terminal will display the messages received.
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](https://github.com/hitesh22rana/mq/blob/main/LICENSE) file for details.
