@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/reflection"
 
-	pb "github.com/hitesh22rana/mq/.proto/go/mq"
+	pb "github.com/hitesh22rana/mq/pkg/proto/mq"
 )
 
 type contextKey string

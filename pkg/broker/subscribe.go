@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/hitesh22rana/mq/.proto/go/mq"
+	pb "github.com/hitesh22rana/mq/pkg/proto/mq"
 )
 
 // subscribe add the subscriber to the specified channel

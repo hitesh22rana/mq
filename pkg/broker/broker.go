@@ -9,7 +9,7 @@ import (
 
 	"go.uber.org/zap"
 
-	pb "github.com/hitesh22rana/mq/.proto/go/mq"
+	pb "github.com/hitesh22rana/mq/pkg/proto/mq"
 	"github.com/hitesh22rana/mq/pkg/storage"
 	"github.com/hitesh22rana/mq/pkg/utils"
 )

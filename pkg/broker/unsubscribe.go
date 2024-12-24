@@ -7,7 +7,7 @@ import (
 
 	"go.uber.org/zap"
 
-	pb "github.com/hitesh22rana/mq/.proto/go/mq"
+	pb "github.com/hitesh22rana/mq/pkg/proto/mq"
 )
 
 // unsubscribe removes subscriber from the specified channel

@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 
-	pb "github.com/hitesh22rana/mq/.proto/go/mq"
+	pb "github.com/hitesh22rana/mq/pkg/proto/mq"
 )
 
 // chunk represents a chunk of data

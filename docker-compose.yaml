@@ -17,4 +17,4 @@ services:
 
 volumes:
   data:
-    external: true
+    name: data
