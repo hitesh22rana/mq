@@ -21,9 +21,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	MQService_CreateChannel_FullMethodName = "/event.MQService/CreateChannel"
-	MQService_Publish_FullMethodName       = "/event.MQService/Publish"
-	MQService_Subscribe_FullMethodName     = "/event.MQService/Subscribe"
+	MQService_CreateChannel_FullMethodName = "/mq.MQService/CreateChannel"
+	MQService_Publish_FullMethodName       = "/mq.MQService/Publish"
+	MQService_Subscribe_FullMethodName     = "/mq.MQService/Subscribe"
 )
 
 // MQServiceClient is the client API for MQService service.
@@ -190,7 +190,7 @@ type MQService_SubscribeServer = grpc.ServerStreamingServer[Message]
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var MQService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "event.MQService",
+	ServiceName: "mq.MQService",
 	HandlerType: (*MQServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

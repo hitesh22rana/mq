@@ -1,4 +1,5 @@
 // pkg/utils/generator.go
+//go:generate mockgen -destination=../mocks/mock_generator.go -package=mocks . Generator
 
 package utils
 

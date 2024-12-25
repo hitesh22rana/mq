@@ -12,35 +12,36 @@ import (
 	pb "github.com/hitesh22rana/mq/pkg/proto/mq"
 )
 
-// createChannel creates a new channel, if it doesn't already exist else joins the existing channel
-func (s *Service) createChannel(ctx context.Context, channel channel) error {
-	_channel := string(channel)
-
+// CreateChannel creates a new channel, if it doesn't already exist else joins the existing channel
+func (s *Service) CreateChannel(
+	ctx context.Context,
+	channel string,
+) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	// Check if the channel already exists, if it does return immediately
-	if s.storage.ChannelExists(_channel) {
+	if s.storage.ChannelExists(channel) {
 		s.logger.Warn(
 			"warn: channel already exists",
-			zap.String("channel", _channel),
+			zap.String("channel", channel),
 		)
 		return nil
 	}
 
 	// Create a new channel in the storage
-	if err := s.storage.CreateChannel(_channel); err != nil {
+	if err := s.storage.CreateChannel(channel); err != nil {
 		s.logger.Error(
 			"error: failed to create channel",
-			zap.String("channel", _channel),
+			zap.String("channel", channel),
 			zap.Error(err),
 		)
-		return ErrUnableToCreateChannel
+		return status.Error(codes.Unavailable, ErrUnableToCreateChannel.Error())
 	}
 
 	s.logger.Info(
 		"info: channel created",
-		zap.String("channel", _channel),
+		zap.String("channel", channel),
 	)
 
 	return nil
@@ -62,8 +63,8 @@ func (s *Server) CreateChannel(ctx context.Context, req *pb.CreateChannelRequest
 	}
 
 	// Create a new channel
-	if err := s.srv.createChannel(ctx, channel(input.channel)); err != nil {
-		return nil, status.Error(codes.Internal, "unable to create channel")
+	if err := s.srv.CreateChannel(ctx, input.channel); err != nil {
+		return nil, err
 	}
 
 	return &pb.CreateChannelResponse{}, nil

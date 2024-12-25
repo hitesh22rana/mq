@@ -2,8 +2,8 @@
 
 SHELL := /bin/bash -o pipefail
 
-.PHONY: generate-proto-go
-generate-proto-go:
+.PHONY: generate-proto
+generate-proto:
 	@rm -rf ./pkg/proto/ && mkdir -p ./pkg/proto && for file in proto/*.proto; do \
 		base=$$(basename $$file); \
 		name=$${base%.*}; \
@@ -13,13 +13,17 @@ generate-proto-go:
 	done
 
 .PHONY: dependencies
-dependencies: generate-proto-go
+dependencies: generate-proto
 	@go mod tidy
 
-.PHONY: build-mq
-build-mq: dependencies
+.PHONY: test
+test: dependencies
+	@go test -v ./...
+
+.PHONY: build
+build: dependencies
 	@go build -o bin/mq cmd/mq/main.go
 
-.PHONY: mq
-mq: build-mq
+.PHONY: run
+run: build
 	@./bin/mq

@@ -10,25 +10,25 @@ import (
 	pb "github.com/hitesh22rana/mq/pkg/proto/mq"
 )
 
-// unsubscribe removes subscriber from the specified channel
-func (s *Service) unsubscribe(
+// UnSubscribe removes subscriber from the specified channel
+func (s *Service) UnSubscribe(
 	ctx context.Context,
 	sub *pb.Subscriber,
-	channel channel,
+	channel string,
 ) error {
 	// Check if the channel exists
-	if !s.storage.ChannelExists(string(channel)) {
+	if !s.storage.ChannelExists(channel) {
 		s.logger.Error(
 			"error: cannot unsubscribe from non-existent channel",
 			zap.String("id", sub.GetId()),
 			zap.String("ip", sub.GetIp()),
-			zap.String("channel", string(channel)),
+			zap.String("channel", channel),
 		)
 		return ErrChannelDoesNotExist
 	}
 
 	// Remove the channel from the subscriber's map
-	s.storage.RemoveChannelFromSubscriberMap(string(channel), sub.GetId())
+	s.storage.RemoveChannelFromSubscriberMap(channel, sub.GetId())
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -39,7 +39,7 @@ func (s *Service) unsubscribe(
 		"info: subscriber removed",
 		zap.String("id", sub.GetId()),
 		zap.String("ip", sub.GetIp()),
-		zap.String("channel", string(channel)),
+		zap.String("channel", channel),
 	)
 
 	return nil

@@ -1,8 +1,11 @@
 // pkg/utils/validator.go
+//go:generate mockgen -destination=../mocks/mock_validator.go -package=mocks . Validator
 
 package utils
 
-import "github.com/go-playground/validator/v10"
+import (
+	"github.com/go-playground/validator/v10"
+)
 
 // Validator defines the interface for validating input structs
 type Validator interface {

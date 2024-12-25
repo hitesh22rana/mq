@@ -1,4 +1,5 @@
 // pkg/mq/mq.go
+//go:generate mockgen -destination=../mocks/mock_mq.go -package=mocks . MQ
 
 package mq
 
@@ -33,21 +34,18 @@ var (
 
 // MQ defines the interface for the mq
 type MQ interface {
-	createChannel(context.Context, channel) error
-	publish(context.Context, channel, *pb.Message) error
-	subscribe(context.Context, *pb.Subscriber, pb.Offset, uint64, channel, chan<- *pb.Message) error
-	unsubscribe(context.Context, *pb.Subscriber, channel) error
+	CreateChannel(context.Context, string) error
+	Publish(context.Context, string, *pb.Message) error
+	Subscribe(context.Context, *pb.Subscriber, pb.Offset, uint64, string, chan<- *pb.Message) error
+	UnSubscribe(context.Context, *pb.Subscriber, string) error
 }
-
-// Channel represents a message channel
-type channel string
 
 // Service is the implementation of the MQ interface
 type Service struct {
 	mu                   sync.RWMutex
 	logger               *zap.Logger
 	storage              storage.Storage
-	channelToSubscribers map[channel]map[*pb.Subscriber]struct{}
+	channelToSubscribers map[string]map[*pb.Subscriber]struct{}
 }
 
 // ServiceOptions represents the options for the mq service
@@ -61,7 +59,7 @@ func NewService(logger *zap.Logger, options *ServiceOptions) *Service {
 		mu:                   sync.RWMutex{},
 		logger:               logger,
 		storage:              options.Storage,
-		channelToSubscribers: make(map[channel]map[*pb.Subscriber]struct{}),
+		channelToSubscribers: make(map[string]map[*pb.Subscriber]struct{}),
 	}
 }
 

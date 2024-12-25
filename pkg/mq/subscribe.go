@@ -15,33 +15,39 @@ import (
 	pb "github.com/hitesh22rana/mq/pkg/proto/mq"
 )
 
-// subscribe add the subscriber to the specified channel
-func (s *Service) subscribe(ctx context.Context, sub *pb.Subscriber, offset pb.Offset, pullInterval uint64, ch channel, msgChan chan<- *pb.Message) error {
-	_channel := string(ch)
+// Subscribe add the subscriber to the specified channel
+func (s *Service) Subscribe(
+	ctx context.Context,
+	sub *pb.Subscriber,
+	offset pb.Offset,
+	pullInterval uint64,
+	channel string,
+	msgChan chan<- *pb.Message,
+) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	// Check if the channel exists
-	if !s.storage.ChannelExists(_channel) {
+	if !s.storage.ChannelExists(channel) {
 		s.logger.Error(
 			"error: cannot subscribe to non-existent channel",
-			zap.String("channel", _channel),
+			zap.String("channel", channel),
 		)
-		return ErrChannelDoesNotExist
+		return status.Error(codes.FailedPrecondition, ErrChannelDoesNotExist.Error())
 	}
 
 	// Initialize the channel to subscribers map, if the channel does not exist
-	if _, exists := s.channelToSubscribers[ch]; !exists {
-		s.channelToSubscribers[ch] = make(map[*pb.Subscriber]struct{}, 0)
+	if _, exists := s.channelToSubscribers[channel]; !exists {
+		s.channelToSubscribers[channel] = make(map[*pb.Subscriber]struct{}, 0)
 	}
 
 	// Add the subscriber to the channel
-	s.channelToSubscribers[ch][sub] = struct{}{}
+	s.channelToSubscribers[channel][sub] = struct{}{}
 	s.logger.Info(
 		"info: subscriber added",
 		zap.String("id", sub.GetId()),
 		zap.String("ip", sub.GetIp()),
-		zap.String("channel", _channel),
+		zap.String("channel", channel),
 	)
 
 	// Read messages from the storage layer and send them to the subscriber
@@ -65,7 +71,7 @@ func (s *Service) subscribe(ctx context.Context, sub *pb.Subscriber, offset pb.O
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				messages, nextOffset, err := s.storage.GetMessages(_channel, sub.GetId(), currentOffset, &isFromLatest)
+				messages, nextOffset, err := s.storage.GetMessages(channel, sub.GetId(), currentOffset, &isFromLatest)
 				if err == nil {
 					currentOffset = nextOffset + 1
 
@@ -82,8 +88,8 @@ func (s *Service) subscribe(ctx context.Context, sub *pb.Subscriber, offset pb.O
 
 type subscribeInput struct {
 	channel      string    `validate:"required"`
-	offset       pb.Offset `validate:"required eq=0|eq=1"`
-	pullInterval uint64    `validate:"required gte=0"`
+	offset       pb.Offset `validate:"oneof=0 1"`
+	pullInterval uint64    `validate:"gte=0"`
 }
 
 // gRPC implementation of the Subscribe method
@@ -102,12 +108,12 @@ func (s *Server) Subscribe(req *pb.SubscribeRequest, stream pb.MQService_Subscri
 	// Get the IP address from the context
 	p, ok := peer.FromContext(stream.Context())
 	if !ok {
-		return status.Error(codes.Unavailable, "failed to get IP address from context")
+		return status.Error(codes.FailedPrecondition, "failed to get IP address from context")
 	}
 
 	ip := p.Addr.String()
 	if ip == "" {
-		return status.Error(codes.Unavailable, "failed to get IP address from context")
+		return status.Error(codes.FailedPrecondition, "failed to get IP address from context")
 	}
 
 	// Create a new subscriber
@@ -129,19 +135,19 @@ func (s *Server) Subscribe(req *pb.SubscribeRequest, stream pb.MQService_Subscri
 			zap.String("ip", sub.GetIp()),
 			zap.String("channel", input.channel),
 		)
-		_ = s.srv.unsubscribe(stream.Context(), sub, channel(input.channel))
+		_ = s.srv.UnSubscribe(stream.Context(), sub, input.channel)
 		closeOnce.Do(func() {
 			close(msgChan)
 		})
 	}()
 
 	// Subscribe the client to the channel
-	if err := s.srv.subscribe(
+	if err := s.srv.Subscribe(
 		stream.Context(),
 		sub,
 		input.offset,
 		input.pullInterval,
-		channel(input.channel),
+		input.channel,
 		msgChan,
 	); err != nil {
 		s.logger.Error(
@@ -151,7 +157,7 @@ func (s *Server) Subscribe(req *pb.SubscribeRequest, stream pb.MQService_Subscri
 			zap.String("channel", input.channel),
 			zap.Error(err),
 		)
-		return status.Error(codes.Unavailable, "failed to subscribe")
+		return err
 	}
 
 	// Stream the messages
@@ -169,7 +175,7 @@ func (s *Server) Subscribe(req *pb.SubscribeRequest, stream pb.MQService_Subscri
 		case <-stream.Context().Done():
 			// Unsubscribe and close the channel only if it hasn't been closed yet
 			closeOnce.Do(func() {
-				_ = s.srv.unsubscribe(stream.Context(), sub, channel(input.channel))
+				_ = s.srv.UnSubscribe(stream.Context(), sub, input.channel)
 				close(msgChan)
 			})
 			return nil

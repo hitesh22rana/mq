@@ -112,7 +112,7 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Info("info: shutting down broker server...")
+	log.Info("info: shutting down mq server...")
 
 	// Create a context with a timeout for the graceful shutdown
 	ctx, cancel := context.WithTimeout(

@@ -154,13 +154,13 @@ docker run \
 
     - Generate the protobuf code and build the binaries using the provided `Makefile`:
         ```bash
-        make build-mq
+        make build
         ```
 
     ### Running the MQ
     Start the mq server:
     ```bash
-    make mq
+    make run
     ```
 
     The broker will start listening on the specified port (default:`50051`).

@@ -12,34 +12,36 @@ import (
 	pb "github.com/hitesh22rana/mq/pkg/proto/mq"
 )
 
-// publish publishes a message to the specified channel
-func (s *Service) publish(ctx context.Context, ch channel, msg *pb.Message) error {
-	_channel := string(ch)
-
+// Publish publishes a message to the specified channel
+func (s *Service) Publish(
+	ctx context.Context,
+	channel string,
+	msg *pb.Message,
+) error {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	if !s.storage.ChannelExists(_channel) {
+	if !s.storage.ChannelExists(channel) {
 		s.logger.Error(
 			"error: cannot publish to non-existent channel",
-			zap.String("channel", _channel),
+			zap.String("channel", channel),
 		)
-		return ErrChannelDoesNotExist
+		return status.Error(codes.FailedPrecondition, ErrChannelDoesNotExist.Error())
 	}
 
 	// Store the message in the storage layer
-	if _, err := s.storage.SaveMessage(_channel, msg); err != nil {
+	if _, err := s.storage.SaveMessage(channel, msg); err != nil {
 		s.logger.Error(
 			"error: failed to save message",
-			zap.String("channel", _channel),
+			zap.String("channel", channel),
 			zap.Error(err),
 		)
-		return ErrFailedToSaveMessage
+		return status.Error(codes.Internal, ErrFailedToSaveMessage.Error())
 	}
 
 	s.logger.Info(
 		"info: message published",
-		zap.String("channel", _channel),
+		zap.String("channel", channel),
 	)
 	return nil
 }
@@ -62,15 +64,15 @@ func (s *Server) Publish(ctx context.Context, req *pb.PublishRequest) (*pb.Publi
 	}
 
 	// Publish the message
-	if err := s.srv.publish(
+	if err := s.srv.Publish(
 		ctx,
-		channel(input.channel),
+		input.channel,
 		&pb.Message{
 			Id:        s.generator.GetUniqueMessageID(),
 			Content:   input.Content,
 			CreatedAt: s.generator.GetCurrentTimestamp(),
 		}); err != nil {
-		return nil, status.Error(codes.Unavailable, "failed to publish message")
+		return nil, err
 	}
 
 	return &pb.PublishResponse{}, nil

@@ -1,4 +1,5 @@
 // pkg/storage/storage.go
+//go:generate mockgen -destination=../mocks/mock_storage.go -package=mocks . Storage
 
 package storage
 
