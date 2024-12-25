@@ -1,6 +1,6 @@
-// pkg/broker/unsubscribe
+// pkg/mq/unsubscribe
 
-package broker
+package mq
 
 import (
 	"context"

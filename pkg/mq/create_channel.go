@@ -1,6 +1,6 @@
-// pkg/broker/create_channel.go
+// pkg/mq/create_channel.go
 
-package broker
+package mq
 
 import (
 	"context"

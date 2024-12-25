@@ -1,6 +1,6 @@
-// pkg/broker/broker.go
+// pkg/mq/mq.go
 
-package broker
+package mq
 
 import (
 	"context"
@@ -15,24 +15,24 @@ import (
 )
 
 var (
-	// ErrFailedToSaveMessage is returned when the broker fails to save a message
+	// ErrFailedToSaveMessage is returned when the mq fails to save a message
 	ErrFailedToSaveMessage = errors.New("error: failed to save message")
 
-	// ErrUnableToCreateChannel is returned when the broker fails to create a channel
+	// ErrUnableToCreateChannel is returned when the mq fails to create a channel
 	ErrUnableToCreateChannel = errors.New("error: unable to create channel")
 
-	// ErrChannelDoesNotExist is returned when the broker tries to publish a message to a non-existent channel
+	// ErrChannelDoesNotExist is returned when the mq tries to publish a message to a non-existent channel
 	ErrChannelDoesNotExist = errors.New("error: channel does not exist")
 
-	// ErrChannelAlreadyExists is returned when the broker tries to create a channel that already exists
+	// ErrChannelAlreadyExists is returned when the mq tries to create a channel that already exists
 	ErrChannelAlreadyExists = errors.New("error: channel already exists")
 
-	// ErrSubscriberDoesNotExist is returned when the broker tries to unsubscribe a subscriber from a channel in which the subscriber does not exist
+	// ErrSubscriberDoesNotExist is returned when the mq tries to unsubscribe a subscriber from a channel in which the subscriber does not exist
 	ErrSubscriberDoesNotExist = errors.New("error: subscriber is not subscribed to the channel")
 )
 
-// Broker defines the interface for the message broker
-type Broker interface {
+// MQ defines the interface for the mq
+type MQ interface {
 	createChannel(context.Context, channel) error
 	publish(context.Context, channel, *pb.Message) error
 	subscribe(context.Context, *pb.Subscriber, pb.Offset, uint64, channel, chan<- *pb.Message) error
@@ -42,7 +42,7 @@ type Broker interface {
 // Channel represents a message channel
 type channel string
 
-// Service is the implementation of the Broker interface
+// Service is the implementation of the MQ interface
 type Service struct {
 	mu                   sync.RWMutex
 	logger               *zap.Logger
@@ -50,12 +50,12 @@ type Service struct {
 	channelToSubscribers map[channel]map[*pb.Subscriber]struct{}
 }
 
-// ServiceOptions represents the options for the broker service
+// ServiceOptions represents the options for the mq service
 type ServiceOptions struct {
 	Storage storage.Storage
 }
 
-// NewService returns a new broker service
+// NewService returns a new mq service
 func NewService(logger *zap.Logger, options *ServiceOptions) *Service {
 	return &Service{
 		mu:                   sync.RWMutex{},
@@ -65,22 +65,22 @@ func NewService(logger *zap.Logger, options *ServiceOptions) *Service {
 	}
 }
 
-// Server is the broker service implementation for gRPC
+// Server is the mq service implementation for gRPC
 type Server struct {
 	logger    *zap.Logger
 	validator utils.Validator
 	generator utils.Generator
-	srv       Broker
+	srv       MQ
 }
 
-// ServerOptions represents the options for the broker server
+// ServerOptions represents the options for the mq server
 type ServerOptions struct {
 	Validator utils.Validator
 	Generator utils.Generator
-	Service   Broker
+	Service   MQ
 }
 
-// NewServer returns a new broker server
+// NewServer returns a new mq server
 func NewServer(logger *zap.Logger, options *ServerOptions) *Server {
 	return &Server{
 		logger:    logger,

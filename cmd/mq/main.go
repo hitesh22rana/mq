@@ -15,7 +15,7 @@ import (
 
 	"github.com/hitesh22rana/mq/internal/config"
 	"github.com/hitesh22rana/mq/internal/logger"
-	"github.com/hitesh22rana/mq/pkg/broker"
+	"github.com/hitesh22rana/mq/pkg/mq"
 	"github.com/hitesh22rana/mq/pkg/storage"
 	"github.com/hitesh22rana/mq/pkg/utils"
 )
@@ -58,18 +58,18 @@ func main() {
 		},
 	)
 
-	// Create broker service
-	srv := broker.NewService(
+	// Create mq service
+	srv := mq.NewService(
 		log,
-		&broker.ServiceOptions{
+		&mq.ServiceOptions{
 			Storage: memoryStorage,
 		},
 	)
 
-	// Create broker server
-	server := broker.NewServer(
+	// Create mq server
+	server := mq.NewServer(
 		log,
-		&broker.ServerOptions{
+		&mq.ServerOptions{
 			Validator: utils.NewValidator(),
 			Generator: utils.NewGenerator(),
 			Service:   srv,
@@ -87,17 +87,17 @@ func main() {
 	}
 
 	// Create gRPC server
-	grpcServer := broker.NewGrpcServer(
-		&broker.GrpcServerOptions{
+	grpcServer := mq.NewGrpcServer(
+		&mq.GrpcServerOptions{
 			MaxRecvMsgSize: cfg.GrpcServer.GrpcServerMaxRecvMsgSize,
 			Server:         server,
 		},
 	)
 
-	// Start the broker server in a separate goroutine
+	// Start the mq server in a separate goroutine
 	go func() {
 		log.Info(
-			"info: broker server started",
+			"info: mq server started",
 			zap.Int("port", cfg.Broker.BrokerPort),
 		)
 		if err := grpcServer.Serve(listener); err != nil {

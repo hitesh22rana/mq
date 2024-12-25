@@ -1,6 +1,6 @@
-// pkg/broker/subscribe.go
+// pkg/mq/subscribe.go
 
-package broker
+package mq
 
 import (
 	"context"

@@ -1,6 +1,6 @@
-// pkg/broker/grpc.go
+// pkg/mq/grpc.go
 
-package broker
+package mq
 
 import (
 	"context"

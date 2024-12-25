@@ -1,6 +1,6 @@
-// pkg/broker/publish.go
+// pkg/mq/publish.go
 
-package broker
+package mq
 
 import (
 	"context"
