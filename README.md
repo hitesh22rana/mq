@@ -41,8 +41,7 @@ It also implements **Write-Ahead Logging (WAL)** to enhance data durability and 
 
 ```bash
 docker run \
-    -e BROKER_PORT=50051 \
-    -e BROKER_HOST=localhost \
+    -e SERVER_PORT=50051 \
     -e ENVIRONMENT=production \
     -e WAL_DIR_PATH=/var/lib/mq \
     -p 50051:50051 \

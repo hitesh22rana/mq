@@ -5,8 +5,7 @@ services:
       dockerfile: Dockerfile
     image: mq
     environment:
-      - BROKER_PORT=50051
-      - BROKER_HOST=localhost
+      - SERVER_PORT=50051
       - ENVIRONMENT=production
       - WAL_DIR_PATH=/var/lib/mq
     volumes:

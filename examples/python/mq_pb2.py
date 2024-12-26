@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x08mq.proto\x12\x05\x65vent\":\n\x07Message\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0f\n\x07\x63ontent\x18\x02 \x01(\x0c\x12\x12\n\ncreated_at\x18\x03 \x01(\x03\"$\n\nSubscriber\x12\n\n\x02id\x18\x01 \x01(\t\x12\n\n\x02ip\x18\x02 \x01(\t\"<\n\x08WalEntry\x12\x0f\n\x07\x63hannel\x18\x01 \x01(\t\x12\x1f\n\x07message\x18\x02 \x01(\x0b\x32\x0e.event.Message\"\'\n\x14\x43reateChannelRequest\x12\x0f\n\x07\x63hannel\x18\x01 \x01(\t\"\x17\n\x15\x43reateChannelResponse\"2\n\x0ePublishRequest\x12\x0f\n\x07\x63hannel\x18\x01 \x01(\t\x12\x0f\n\x07\x63ontent\x18\x02 \x01(\x0c\"\x11\n\x0fPublishResponse\"Y\n\x10SubscribeRequest\x12\x0f\n\x07\x63hannel\x18\x01 \x01(\t\x12\x1d\n\x06offset\x18\x02 \x01(\x0e\x32\r.event.Offset\x12\x15\n\rpull_interval\x18\x03 \x01(\x04*E\n\x06Offset\x12\x12\n\x0eOFFSET_UNKNOWN\x10\x00\x12\x14\n\x10OFFSET_BEGINNING\x10\x01\x12\x11\n\rOFFSET_LATEST\x10\x02\x32\xcf\x01\n\tMQService\x12L\n\rCreateChannel\x12\x1b.event.CreateChannelRequest\x1a\x1c.event.CreateChannelResponse\"\x00\x12:\n\x07Publish\x12\x15.event.PublishRequest\x1a\x16.event.PublishResponse\"\x00\x12\x38\n\tSubscribe\x12\x17.event.SubscribeRequest\x1a\x0e.event.Message\"\x00\x30\x01\x42,Z*github.com/hitesh22rana/mq/pkg/proto/mq;mqb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x08mq.proto\x12\x02mq\":\n\x07Message\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0f\n\x07\x63ontent\x18\x02 \x01(\x0c\x12\x12\n\ncreated_at\x18\x03 \x01(\x03\"$\n\nSubscriber\x12\n\n\x02id\x18\x01 \x01(\t\x12\n\n\x02ip\x18\x02 \x01(\t\"9\n\x08WalEntry\x12\x0f\n\x07\x63hannel\x18\x01 \x01(\t\x12\x1c\n\x07message\x18\x02 \x01(\x0b\x32\x0b.mq.Message\"\'\n\x14\x43reateChannelRequest\x12\x0f\n\x07\x63hannel\x18\x01 \x01(\t\"\x17\n\x15\x43reateChannelResponse\"2\n\x0ePublishRequest\x12\x0f\n\x07\x63hannel\x18\x01 \x01(\t\x12\x0f\n\x07\x63ontent\x18\x02 \x01(\x0c\"\x11\n\x0fPublishResponse\"V\n\x10SubscribeRequest\x12\x0f\n\x07\x63hannel\x18\x01 \x01(\t\x12\x1a\n\x06offset\x18\x02 \x01(\x0e\x32\n.mq.Offset\x12\x15\n\rpull_interval\x18\x03 \x01(\x04*E\n\x06Offset\x12\x12\n\x0eOFFSET_UNKNOWN\x10\x00\x12\x14\n\x10OFFSET_BEGINNING\x10\x01\x12\x11\n\rOFFSET_LATEST\x10\x02\x32\xbd\x01\n\tMQService\x12\x46\n\rCreateChannel\x12\x18.mq.CreateChannelRequest\x1a\x19.mq.CreateChannelResponse\"\x00\x12\x34\n\x07Publish\x12\x12.mq.PublishRequest\x1a\x13.mq.PublishResponse\"\x00\x12\x32\n\tSubscribe\x12\x14.mq.SubscribeRequest\x1a\x0b.mq.Message\"\x00\x30\x01\x42,Z*github.com/hitesh22rana/mq/pkg/proto/mq;mqb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,24 +32,24 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'mq_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'Z*github.com/hitesh22rana/mq/pkg/proto/mq;mq'
-  _globals['_OFFSET']._serialized_start=407
-  _globals['_OFFSET']._serialized_end=476
-  _globals['_MESSAGE']._serialized_start=19
-  _globals['_MESSAGE']._serialized_end=77
-  _globals['_SUBSCRIBER']._serialized_start=79
-  _globals['_SUBSCRIBER']._serialized_end=115
-  _globals['_WALENTRY']._serialized_start=117
-  _globals['_WALENTRY']._serialized_end=177
-  _globals['_CREATECHANNELREQUEST']._serialized_start=179
-  _globals['_CREATECHANNELREQUEST']._serialized_end=218
-  _globals['_CREATECHANNELRESPONSE']._serialized_start=220
-  _globals['_CREATECHANNELRESPONSE']._serialized_end=243
-  _globals['_PUBLISHREQUEST']._serialized_start=245
-  _globals['_PUBLISHREQUEST']._serialized_end=295
-  _globals['_PUBLISHRESPONSE']._serialized_start=297
-  _globals['_PUBLISHRESPONSE']._serialized_end=314
-  _globals['_SUBSCRIBEREQUEST']._serialized_start=316
-  _globals['_SUBSCRIBEREQUEST']._serialized_end=405
-  _globals['_MQSERVICE']._serialized_start=479
-  _globals['_MQSERVICE']._serialized_end=686
+  _globals['_OFFSET']._serialized_start=398
+  _globals['_OFFSET']._serialized_end=467
+  _globals['_MESSAGE']._serialized_start=16
+  _globals['_MESSAGE']._serialized_end=74
+  _globals['_SUBSCRIBER']._serialized_start=76
+  _globals['_SUBSCRIBER']._serialized_end=112
+  _globals['_WALENTRY']._serialized_start=114
+  _globals['_WALENTRY']._serialized_end=171
+  _globals['_CREATECHANNELREQUEST']._serialized_start=173
+  _globals['_CREATECHANNELREQUEST']._serialized_end=212
+  _globals['_CREATECHANNELRESPONSE']._serialized_start=214
+  _globals['_CREATECHANNELRESPONSE']._serialized_end=237
+  _globals['_PUBLISHREQUEST']._serialized_start=239
+  _globals['_PUBLISHREQUEST']._serialized_end=289
+  _globals['_PUBLISHRESPONSE']._serialized_start=291
+  _globals['_PUBLISHRESPONSE']._serialized_end=308
+  _globals['_SUBSCRIBEREQUEST']._serialized_start=310
+  _globals['_SUBSCRIBEREQUEST']._serialized_end=396
+  _globals['_MQSERVICE']._serialized_start=470
+  _globals['_MQSERVICE']._serialized_end=659
 # @@protoc_insertion_point(module_scope)

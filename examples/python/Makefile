@@ -19,10 +19,10 @@ python-example-generate-proto-python: python-example-dependencies
 			$$file; \
 	done
 
-.PHONY: python-example-run-publisher
-python-example-run-publisher: python-example-generate-proto-python
+.PHONY: python-example-publisher
+python-example-publisher: python-example-generate-proto-python
 	@python publisher.py
 
-.PHONY: python-example-run-subscriber
-python-example-run-subscriber: python-example-generate-proto-python
+.PHONY: python-example-subscriber
+python-example-subscriber: python-example-generate-proto-python
 	@python subscriber.py

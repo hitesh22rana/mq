@@ -36,17 +36,17 @@ class MQServiceStub(object):
             channel: A grpc.Channel.
         """
         self.CreateChannel = channel.unary_unary(
-                '/event.MQService/CreateChannel',
+                '/mq.MQService/CreateChannel',
                 request_serializer=mq__pb2.CreateChannelRequest.SerializeToString,
                 response_deserializer=mq__pb2.CreateChannelResponse.FromString,
                 _registered_method=True)
         self.Publish = channel.unary_unary(
-                '/event.MQService/Publish',
+                '/mq.MQService/Publish',
                 request_serializer=mq__pb2.PublishRequest.SerializeToString,
                 response_deserializer=mq__pb2.PublishResponse.FromString,
                 _registered_method=True)
         self.Subscribe = channel.unary_stream(
-                '/event.MQService/Subscribe',
+                '/mq.MQService/Subscribe',
                 request_serializer=mq__pb2.SubscribeRequest.SerializeToString,
                 response_deserializer=mq__pb2.Message.FromString,
                 _registered_method=True)
@@ -97,9 +97,9 @@ def add_MQServiceServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'event.MQService', rpc_method_handlers)
+            'mq.MQService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('event.MQService', rpc_method_handlers)
+    server.add_registered_method_handlers('mq.MQService', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
@@ -121,7 +121,7 @@ class MQService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/event.MQService/CreateChannel',
+            '/mq.MQService/CreateChannel',
             mq__pb2.CreateChannelRequest.SerializeToString,
             mq__pb2.CreateChannelResponse.FromString,
             options,
@@ -148,7 +148,7 @@ class MQService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/event.MQService/Publish',
+            '/mq.MQService/Publish',
             mq__pb2.PublishRequest.SerializeToString,
             mq__pb2.PublishResponse.FromString,
             options,
@@ -175,7 +175,7 @@ class MQService(object):
         return grpc.experimental.unary_stream(
             request,
             target,
-            '/event.MQService/Subscribe',
+            '/mq.MQService/Subscribe',
             mq__pb2.SubscribeRequest.SerializeToString,
             mq__pb2.Message.FromString,
             options,

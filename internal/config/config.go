@@ -16,10 +16,7 @@ const envPrefix = ""
 type Configuration struct {
 	Storage
 	Wal
-	Broker
-	GrpcServer
-	Publisher
-	Subscriber
+	Server
 	Environment
 }
 
@@ -57,46 +54,18 @@ type Wal struct {
 	WalBytesPerSync uint32 `envconfig:"WAL_BYTES_PER_SYNC" default:"5000"`
 }
 
-// Broker represents the configuration settings for a message broker.
-type Broker struct {
-	// BrokerPort specifies the port on which the broker listens. This field is required.
-	BrokerPort int `envconfig:"BROKER_PORT" required:"true"`
+// Server holds the configuration settings for server.
+type Server struct {
+	// ServerPort specifies the port on which the server listens. This field is required.
+	ServerPort int `envconfig:"SERVER_PORT" required:"true"`
 
-	// BrokerHost specifies the host address of the broker. This field is required.
-	BrokerHost string `envconfig:"BROKER_HOST" required:"true"`
-
-	// BrokerGracefulShutdownTimeout specifies the duration to wait for a graceful shutdown
+	// ServerGracefulShutdownTimeout specifies the duration to wait for a graceful shutdown
 	// default: 5s
-	BrokerGracefulShutdownTimeout time.Duration `envconfig:"BROKER_GRACEFUL_SHUTDOWN_TIMEOUT" default:"5s"`
-}
+	ServerGracefulShutdownTimeout time.Duration `envconfig:"SERVER_GRACEFUL_SHUTDOWN_TIMEOUT" default:"5s"`
 
-// GrpcServer holds the configuration settings for a gRPC server.
-type GrpcServer struct {
-	// GrpcServerMaxRecvMsgSize specifies the maximum size of a message that the server can receive.
+	// ServerMaxRecvMsgSize specifies the maximum size of a message that the server can receive.
 	// default: 4194304 (4 MB)
-	GrpcServerMaxRecvMsgSize int `envconfig:"GRPC_SERVER_MAX_RECV_MSG_SIZE" default:"4194304"` // 4 MB (41,94,304) bytes
-}
-
-// Publisher holds the configuration settings for a publisher.
-type Publisher struct {
-	// PublisherKeepAliveTime is the duration for the keep-alive time (interval between keep-alive pings).
-	// default: 10s
-	PublisherKeepAliveTime time.Duration `envconfig:"PUBLISHER_KEEPALIVE_TIME" default:"10s"`
-
-	// PublisherKeepAliveTimeout is the duration for the keep-alive timeout (time to wait for a keep-alive response before considering the connection dead)
-	// default: 5s
-	PublisherKeepAliveTimeout time.Duration `envconfig:"PUBLISHER_KEEPALIVE_TIMEOUT" default:"5s"`
-
-	// PublisherPermitWithoutStream is a boolean indicating whether to allow keep-alive pings when there are no active streams.
-	// default: true
-	PublisherPermitWithoutStream bool `envconfig:"PUBLISHER_PERMIT_WITHOUT_STREAM" default:"true"`
-}
-
-// Subscriber represents the configuration for the subscriber
-type Subscriber struct {
-	// SubscriberDataPullingInterval is the interval at which the subscriber pulls data from the broker
-	// default: 100 (100ms)
-	SubscriberDataPullingInterval uint64 `envconfig:"SUBSCRIBER_DATA_PULLING_INTERVAL" default:"100"`
+	ServerMaxRecvMsgSize int `envconfig:"SERVER_MAX_RECV_MSG_SIZE" default:"4194304"` // 4 MB (41,94,304) bytes
 }
 
 // Environment holds the configuration for the application's environment settings.

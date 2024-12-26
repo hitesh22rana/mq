@@ -77,11 +77,14 @@ func main() {
 	)
 
 	// Create TCP listener
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.Broker.BrokerPort))
+	listener, err := net.Listen(
+		"tcp",
+		fmt.Sprintf(":%d", cfg.Server.ServerPort),
+	)
 	if err != nil {
 		log.Fatal(
 			"fatal: failed to listen",
-			zap.Int("port", cfg.Broker.BrokerPort),
+			zap.Int("port", cfg.Server.ServerPort),
 			zap.Error(err),
 		)
 	}
@@ -89,7 +92,7 @@ func main() {
 	// Create gRPC server
 	grpcServer := mq.NewGrpcServer(
 		&mq.GrpcServerOptions{
-			MaxRecvMsgSize: cfg.GrpcServer.GrpcServerMaxRecvMsgSize,
+			MaxRecvMsgSize: cfg.Server.ServerMaxRecvMsgSize,
 			Server:         server,
 		},
 	)
@@ -98,7 +101,7 @@ func main() {
 	go func() {
 		log.Info(
 			"info: mq server started",
-			zap.Int("port", cfg.Broker.BrokerPort),
+			zap.Int("port", cfg.Server.ServerPort),
 		)
 		if err := grpcServer.Serve(listener); err != nil {
 			log.Fatal(
@@ -117,7 +120,7 @@ func main() {
 	// Create a context with a timeout for the graceful shutdown
 	ctx, cancel := context.WithTimeout(
 		context.Background(),
-		cfg.Broker.BrokerGracefulShutdownTimeout,
+		cfg.Server.ServerGracefulShutdownTimeout,
 	)
 	defer cancel()
 
