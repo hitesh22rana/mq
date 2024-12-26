@@ -1,16 +1,24 @@
-name: Docker Build and Publish
+name: Release
 
 on:
   push:
     tags:
       - 'v*'
+  workflow_run:
+    workflows: 
+      - Test and PR Merge Check
+    types:
+      - completed
 
 jobs:
-  build-and-publish:
+  release:
+    if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
+    
     permissions:
       contents: read
       packages: write
+    
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -29,7 +37,7 @@ jobs:
         id: version
         run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
-      - name: Build and push Docker image (multi-arch)
+      - name: Build and push Docker image (multi-arch) to ghcr.io
         run: |
           docker buildx build \
             --platform linux/amd64,linux/arm64,linux/arm/v7 \
