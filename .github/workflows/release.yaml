@@ -1,4 +1,4 @@
-name: Docker Build and Publish
+name: Release
 
 on:
   push:
@@ -6,11 +6,13 @@ on:
       - 'v*'
 
 jobs:
-  build-and-publish:
+  release:
     runs-on: ubuntu-latest
+
     permissions:
       contents: read
       packages: write
+    
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -29,7 +31,7 @@ jobs:
         id: version
         run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
-      - name: Build and push Docker image (multi-arch)
+      - name: Build and push Docker image (multi-arch) to ghcr.io
         run: |
           docker buildx build \
             --platform linux/amd64,linux/arm64,linux/arm/v7 \

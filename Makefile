@@ -18,7 +18,7 @@ dependencies: generate-proto
 
 .PHONY: test
 test: dependencies
-	@go test -v ./...
+	@go test ./...
 
 .PHONY: build
 build: dependencies
