@@ -197,7 +197,6 @@ func (m *MemoryStorage) GetMessages(
 	channel string,
 	subscriberID string,
 	offset uint64,
-	isFromLatest *bool,
 ) ([]interface{}, uint64, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -211,23 +210,21 @@ func (m *MemoryStorage) GetMessages(
 		return nil, 0, fmt.Errorf("channel '%s' does not exist", channel)
 	}
 
-	// Check if the offset is greater than the number of messages
-	if offset >= messages.len {
-		return []interface{}(nil), 0, ErrInvalidOffset
-	}
-
 	// Initialize the subscriberToChannelChunk map if it does not exist
 	if _, exists := m.subscriberToChannelChunk[subscriberID]; !exists {
 		m.subscriberToChannelChunk[subscriberID] = make(map[string]*chunk)
 	}
 
-	// Return only the latest message if isStart is false
-	if *isFromLatest {
-		*isFromLatest = false
+	// Check if the offset is valid
+	if offset >= messages.len {
+		// Return only the latest message if the offset is set to the latest
+		if offset == OffsetLatest {
+			// Update the last chunk in the subscriberToChannelChunk map to the latest message
+			m.subscriberToChannelChunk[subscriberID][channel] = messages.tail
+			return []interface{}(nil), messages.len - 1, nil
+		}
 
-		// Update the last chunk in the subscriberToChannelChunk map to the latest message
-		m.subscriberToChannelChunk[subscriberID][channel] = messages.tail
-		return []interface{}(nil), messages.len - 1, nil
+		return []interface{}(nil), 0, ErrInvalidOffset
 	}
 
 	// Limit the number of messages to be returned

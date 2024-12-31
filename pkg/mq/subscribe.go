@@ -15,6 +15,14 @@ import (
 	pb "github.com/hitesh22rana/mq/pkg/proto/mq"
 )
 
+const (
+	// OffsetBeginning is the offset to start reading messages from the beginning
+	OffsetBeginning uint64 = 0
+
+	// OffsetLatest is the offset to start reading messages from the latest
+	OffsetLatest uint64 = ^uint64(0)
+)
+
 // Subscribe add the subscriber to the specified channel
 func (s *Service) Subscribe(
 	ctx context.Context,
@@ -52,16 +60,16 @@ func (s *Service) Subscribe(
 
 	// Read messages from the storage layer and send them to the subscriber
 	var currentOffset uint64 = 0
-	isFromLatest := false
 	switch offset {
 	case pb.Offset_OFFSET_BEGINNING:
-		isFromLatest = false
+		currentOffset = OffsetBeginning
 	case pb.Offset_OFFSET_LATEST:
-		isFromLatest = true
+		currentOffset = OffsetLatest
 	default:
 		return status.Error(codes.InvalidArgument, "invalid offset")
 	}
 
+	var subID string = sub.GetId()
 	go func() {
 		// Read messages from the storage layer endlessly at the specified interval
 		ticker := time.NewTicker(time.Duration(pullInterval) * time.Millisecond)
@@ -71,7 +79,7 @@ func (s *Service) Subscribe(
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				messages, nextOffset, err := s.storage.GetMessages(channel, sub.GetId(), currentOffset, &isFromLatest)
+				messages, nextOffset, err := s.storage.GetMessages(channel, subID, currentOffset)
 				if err == nil {
 					currentOffset = nextOffset + 1
 

@@ -62,9 +62,9 @@ func (mr *MockStorageMockRecorder) CreateChannel(arg0 interface{}) *gomock.Call 
 }
 
 // GetMessages mocks base method.
-func (m *MockStorage) GetMessages(arg0, arg1 string, arg2 uint64, arg3 *bool) ([]interface{}, uint64, error) {
+func (m *MockStorage) GetMessages(arg0, arg1 string, arg2 uint64) ([]interface{}, uint64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetMessages", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "GetMessages", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]interface{})
 	ret1, _ := ret[1].(uint64)
 	ret2, _ := ret[2].(error)
@@ -72,9 +72,9 @@ func (m *MockStorage) GetMessages(arg0, arg1 string, arg2 uint64, arg3 *bool) ([
 }
 
 // GetMessages indicates an expected call of GetMessages.
-func (mr *MockStorageMockRecorder) GetMessages(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+func (mr *MockStorageMockRecorder) GetMessages(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMessages", reflect.TypeOf((*MockStorage)(nil).GetMessages), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMessages", reflect.TypeOf((*MockStorage)(nil).GetMessages), arg0, arg1, arg2)
 }
 
 // RemoveChannelFromSubscriberMap mocks base method.

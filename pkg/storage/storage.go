@@ -7,6 +7,14 @@ import (
 	"errors"
 )
 
+const (
+	// OffsetBeginning is the offset to start reading messages from the beginning
+	OffsetBeginning uint64 = 0
+
+	// OffsetLatest is the offset to start reading messages from the latest
+	OffsetLatest uint64 = ^uint64(0)
+)
+
 var (
 	// ErrInvalidOffset is returned when an invalid offset is provided
 	ErrInvalidOffset = errors.New("error: invalid offset provided for message retrieval")
@@ -18,7 +26,7 @@ var (
 // Storage defines the interface for message storage mechanisms
 type Storage interface {
 	SaveMessage(string, interface{}) (uint64, error)
-	GetMessages(string, string, uint64, *bool) ([]interface{}, uint64, error)
+	GetMessages(string, string, uint64) ([]interface{}, uint64, error)
 	CreateChannel(string) error
 	ChannelExists(string) bool
 	RemoveChannelFromSubscriberMap(string, string)
