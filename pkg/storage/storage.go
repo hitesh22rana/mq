@@ -5,6 +5,8 @@ package storage
 
 import (
 	"errors"
+
+	pb "github.com/hitesh22rana/mq/pkg/proto/mq"
 )
 
 const (
@@ -25,8 +27,8 @@ var (
 
 // Storage defines the interface for message storage mechanisms
 type Storage interface {
-	SaveMessage(string, interface{}) (uint64, error)
-	GetMessages(string, string, uint64) ([]interface{}, uint64, error)
+	SaveMessage(string, *pb.Message) (uint64, error)
+	GetMessages(string, string, uint64) ([]*pb.Message, uint64, error)
 	CreateChannel(string) error
 	ChannelExists(string) bool
 	RemoveChannelFromSubscriberMap(string, string)

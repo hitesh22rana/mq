@@ -84,7 +84,7 @@ func (s *Service) Subscribe(
 					currentOffset = nextOffset + 1
 
 					for _, msg := range messages {
-						msgChan <- msg.(*pb.Message)
+						msgChan <- msg
 					}
 				}
 			}

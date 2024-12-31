@@ -8,6 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	mq "github.com/hitesh22rana/mq/pkg/proto/mq"
 )
 
 // MockStorage is a mock of Storage interface.
@@ -62,10 +63,10 @@ func (mr *MockStorageMockRecorder) CreateChannel(arg0 interface{}) *gomock.Call 
 }
 
 // GetMessages mocks base method.
-func (m *MockStorage) GetMessages(arg0, arg1 string, arg2 uint64) ([]interface{}, uint64, error) {
+func (m *MockStorage) GetMessages(arg0, arg1 string, arg2 uint64) ([]*mq.Message, uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetMessages", arg0, arg1, arg2)
-	ret0, _ := ret[0].([]interface{})
+	ret0, _ := ret[0].([]*mq.Message)
 	ret1, _ := ret[1].(uint64)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
@@ -90,7 +91,7 @@ func (mr *MockStorageMockRecorder) RemoveChannelFromSubscriberMap(arg0, arg1 int
 }
 
 // SaveMessage mocks base method.
-func (m *MockStorage) SaveMessage(arg0 string, arg1 interface{}) (uint64, error) {
+func (m *MockStorage) SaveMessage(arg0 string, arg1 *mq.Message) (uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveMessage", arg0, arg1)
 	ret0, _ := ret[0].(uint64)

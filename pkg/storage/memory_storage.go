@@ -16,7 +16,7 @@ import (
 
 // chunk represents a chunk of data
 type chunk struct {
-	data interface{}
+	data *pb.Message
 	prev *chunk
 	next *chunk
 }
@@ -136,7 +136,7 @@ func NewMemoryStorage(logger *zap.Logger, options *MemoryStorageOptions) *Memory
 // SaveMessage saves a message to the specified channel
 func (m *MemoryStorage) SaveMessage(
 	channel string,
-	message interface{},
+	message *pb.Message,
 ) (uint64, error) {
 	// Create the channel if it does not exist
 	if !m.ChannelExists(channel) {
@@ -156,7 +156,7 @@ func (m *MemoryStorage) SaveMessage(
 	// Write the message to the Write-Ahead Log (WAL)
 	entry := &pb.WalEntry{
 		Channel: channel,
-		Message: message.(*pb.Message),
+		Message: message,
 	}
 
 	data, err := proto.Marshal(entry)
@@ -197,7 +197,7 @@ func (m *MemoryStorage) GetMessages(
 	channel string,
 	subscriberID string,
 	offset uint64,
-) ([]interface{}, uint64, error) {
+) ([]*pb.Message, uint64, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
@@ -221,10 +221,10 @@ func (m *MemoryStorage) GetMessages(
 		if offset == OffsetLatest {
 			// Update the last chunk in the subscriberToChannelChunk map to the latest message
 			m.subscriberToChannelChunk[subscriberID][channel] = messages.tail
-			return []interface{}(nil), messages.len - 1, nil
+			return []*pb.Message(nil), messages.len - 1, nil
 		}
 
-		return []interface{}(nil), 0, ErrInvalidOffset
+		return []*pb.Message(nil), 0, ErrInvalidOffset
 	}
 
 	// Limit the number of messages to be returned
@@ -236,7 +236,7 @@ func (m *MemoryStorage) GetMessages(
 	}
 
 	// Copy the messages from the channel
-	data := make([]interface{}, 0)
+	data := make([]*pb.Message, 0)
 
 	// Get the iterator to the start offset
 	iterator := messages.head
