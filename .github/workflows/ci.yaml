@@ -1,18 +1,40 @@
-name: Release
+name: CI
 
-on:
-  push:
-    tags:
-      - 'v*'
+on: [pull_request, push]
 
 jobs:
-  release:
+  test:
     runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
 
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.23
+
+      - name: Build code
+        run: go build -o bin/mq cmd/mq/main.go
+
+      - name: Run tests
+        run: go test ./...
+
+      - name: Check if PR can be merged
+        if: github.event_name == 'pull_request'
+        run: |
+          if [ $? -ne 0 ]; then
+            echo "Tests failed, PR cannot be merged!"
+            exit 1
+          fi
+
+  release:
+    needs: test
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-    
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
