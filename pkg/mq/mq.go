@@ -8,8 +8,6 @@ import (
 	"errors"
 	"sync"
 
-	"go.uber.org/zap"
-
 	pb "github.com/hitesh22rana/mq/pkg/proto/mq"
 	"github.com/hitesh22rana/mq/pkg/storage"
 	"github.com/hitesh22rana/mq/pkg/utils"
@@ -43,7 +41,6 @@ type MQ interface {
 // Service is the implementation of the MQ interface
 type Service struct {
 	mu                   sync.RWMutex
-	logger               *zap.Logger
 	storage              storage.Storage
 	channelToSubscribers map[string]map[*pb.Subscriber]struct{}
 }
@@ -54,10 +51,11 @@ type ServiceOptions struct {
 }
 
 // NewService returns a new mq service
-func NewService(logger *zap.Logger, options *ServiceOptions) *Service {
+func NewService(
+	options *ServiceOptions,
+) *Service {
 	return &Service{
 		mu:                   sync.RWMutex{},
-		logger:               logger,
 		storage:              options.Storage,
 		channelToSubscribers: make(map[string]map[*pb.Subscriber]struct{}),
 	}
@@ -65,7 +63,6 @@ func NewService(logger *zap.Logger, options *ServiceOptions) *Service {
 
 // Server is the mq service implementation for gRPC
 type Server struct {
-	logger    *zap.Logger
 	validator utils.Validator
 	generator utils.Generator
 	srv       MQ
@@ -79,9 +76,10 @@ type ServerOptions struct {
 }
 
 // NewServer returns a new mq server
-func NewServer(logger *zap.Logger, options *ServerOptions) *Server {
+func NewServer(
+	options *ServerOptions,
+) *Server {
 	return &Server{
-		logger:    logger,
 		validator: options.Validator,
 		generator: options.Generator,
 		srv:       options.Service,

@@ -14,7 +14,9 @@ import (
 
 type contextKey string
 
-const IPContextKey contextKey = "ip"
+const (
+	ipContextKey contextKey = "ip"
+)
 
 // GrpcServer is the gRPC server
 type GrpcServer struct {
@@ -32,8 +34,12 @@ type GrpcServerOptions struct {
 func NewGrpcServer(options *GrpcServerOptions) *grpc.Server {
 	// Use the interceptor to log incoming gRPC requests
 	s := grpc.NewServer(
-		grpc.UnaryInterceptor(UnaryIPInterceptor),
-		grpc.MaxRecvMsgSize(options.MaxRecvMsgSize),
+		grpc.UnaryInterceptor(
+			UnaryIPInterceptor,
+		),
+		grpc.MaxRecvMsgSize(
+			options.MaxRecvMsgSize,
+		),
 	)
 	pb.RegisterMQServiceServer(
 		s,
@@ -44,25 +50,39 @@ func NewGrpcServer(options *GrpcServerOptions) *grpc.Server {
 }
 
 // UnaryIPInterceptor is a gRPC interceptor that adds client ip and request id to the context
-func UnaryIPInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+func UnaryIPInterceptor(
+	ctx context.Context,
+	req interface{},
+	info *grpc.UnaryServerInfo,
+	handler grpc.UnaryHandler,
+) (interface{}, error) {
 	if p, ok := peer.FromContext(ctx); ok {
-		ctx = context.WithValue(ctx, IPContextKey, p.Addr.String())
+		ctx = context.WithValue(ctx, ipContextKey, p.Addr.String())
 	}
 
 	return handler(ctx, req)
 }
 
 // CreateChannel gRPC endpoint
-func (gRPC *GrpcServer) CreateChannel(ctx context.Context, req *pb.CreateChannelRequest) (*pb.CreateChannelResponse, error) {
+func (gRPC *GrpcServer) CreateChannel(
+	ctx context.Context,
+	req *pb.CreateChannelRequest,
+) (*pb.CreateChannelResponse, error) {
 	return gRPC.server.CreateChannel(ctx, req)
 }
 
 // Publish gRPC endpoint
-func (gRPC *GrpcServer) Publish(ctx context.Context, req *pb.PublishRequest) (*pb.PublishResponse, error) {
+func (gRPC *GrpcServer) Publish(
+	ctx context.Context,
+	req *pb.PublishRequest,
+) (*pb.PublishResponse, error) {
 	return gRPC.server.Publish(ctx, req)
 }
 
 // Subscribe gRPC endpoint
-func (gRPC *GrpcServer) Subscribe(req *pb.SubscribeRequest, stream pb.MQService_SubscribeServer) error {
+func (gRPC *GrpcServer) Subscribe(
+	req *pb.SubscribeRequest,
+	stream pb.MQService_SubscribeServer,
+) error {
 	return gRPC.server.Subscribe(req, stream)
 }

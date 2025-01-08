@@ -4,10 +4,10 @@ package mq
 
 import (
 	"context"
+	"log/slog"
 	"sync"
 	"time"
 
-	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
@@ -37,9 +37,9 @@ func (s *Service) Subscribe(
 
 	// Check if the channel exists
 	if !s.storage.ChannelExists(channel) {
-		s.logger.Error(
-			"error: cannot subscribe to non-existent channel",
-			zap.String("channel", channel),
+		slog.Error(
+			"cannot subscribe to non-existent channel",
+			slog.String("channel", channel),
 		)
 		return status.Error(codes.FailedPrecondition, ErrChannelDoesNotExist.Error())
 	}
@@ -51,11 +51,11 @@ func (s *Service) Subscribe(
 
 	// Add the subscriber to the channel
 	s.channelToSubscribers[channel][sub] = struct{}{}
-	s.logger.Info(
-		"info: subscriber added",
-		zap.String("id", sub.GetId()),
-		zap.String("ip", sub.GetIp()),
-		zap.String("channel", channel),
+	slog.Info(
+		"subscriber added",
+		slog.String("id", sub.GetId()),
+		slog.String("ip", sub.GetIp()),
+		slog.String("channel", channel),
 	)
 
 	// Read messages from the storage layer and send them to the subscriber
@@ -79,7 +79,11 @@ func (s *Service) Subscribe(
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				messages, nextOffset, err := s.storage.GetMessages(channel, subID, currentOffset)
+				messages, nextOffset, err := s.storage.GetMessages(
+					channel,
+					subID,
+					currentOffset,
+				)
 				if err == nil {
 					currentOffset = nextOffset + 1
 
@@ -101,7 +105,10 @@ type subscribeInput struct {
 }
 
 // gRPC implementation of the Subscribe method
-func (s *Server) Subscribe(req *pb.SubscribeRequest, stream pb.MQService_SubscribeServer) error {
+func (s *Server) Subscribe(
+	req *pb.SubscribeRequest,
+	stream pb.MQService_SubscribeServer,
+) error {
 	input := &subscribeInput{
 		channel:      req.GetChannel(),
 		offset:       req.GetOffset(),
@@ -137,11 +144,11 @@ func (s *Server) Subscribe(req *pb.SubscribeRequest, stream pb.MQService_Subscri
 	// Defer the unsubscription and closing of the channel
 	defer func() {
 		// Unsubscribe when the stream ends
-		s.logger.Warn(
+		slog.Warn(
 			"warn: unsubscribing client",
-			zap.String("id", sub.GetId()),
-			zap.String("ip", sub.GetIp()),
-			zap.String("channel", input.channel),
+			slog.String("id", sub.GetId()),
+			slog.String("ip", sub.GetIp()),
+			slog.String("channel", input.channel),
 		)
 		_ = s.srv.UnSubscribe(stream.Context(), sub, input.channel)
 		closeOnce.Do(func() {
@@ -158,12 +165,12 @@ func (s *Server) Subscribe(req *pb.SubscribeRequest, stream pb.MQService_Subscri
 		input.channel,
 		msgChan,
 	); err != nil {
-		s.logger.Error(
-			"error: failed to subscribe",
-			zap.String("ip", ip),
-			zap.String("id", sub.GetId()),
-			zap.String("channel", input.channel),
-			zap.Error(err),
+		slog.Error(
+			"failed to subscribe",
+			slog.String("ip", ip),
+			slog.String("id", sub.GetId()),
+			slog.String("channel", input.channel),
+			slog.Any("error", err),
 		)
 		return err
 	}

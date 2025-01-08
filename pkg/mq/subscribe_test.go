@@ -9,7 +9,6 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
@@ -22,11 +21,9 @@ func TestSubscribeService(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	logger := zap.NewNop()
 	mockStorage := mocks.NewMockStorage(ctrl)
 
 	service := NewService(
-		logger,
 		&ServiceOptions{
 			Storage: mockStorage,
 		},
@@ -109,13 +106,11 @@ func TestSubscribeServer(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	logger := zap.NewNop()
 	mockValidator := mocks.NewMockValidator(ctrl)
 	mockGenerator := mocks.NewMockGenerator(ctrl)
 	mockService := mocks.NewMockMQ(ctrl)
 
 	server := NewServer(
-		logger,
 		&ServerOptions{
 			Validator: mockValidator,
 			Generator: mockGenerator,
@@ -155,7 +150,10 @@ func TestSubscribeServer(t *testing.T) {
 				Offset:       pb.Offset_OFFSET_BEGINNING,
 				PullInterval: 1000,
 			},
-			serverStream: nil,
+			serverStream: mocks.NewServerStreamMock(
+				context.Background(),
+				1,
+			),
 			setup: func() {
 				mockValidator.EXPECT().
 					ValidateStruct(gomock.Any()).

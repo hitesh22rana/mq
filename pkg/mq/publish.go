@@ -4,8 +4,8 @@ package mq
 
 import (
 	"context"
+	"log/slog"
 
-	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -22,26 +22,26 @@ func (s *Service) Publish(
 	defer s.mu.RUnlock()
 
 	if !s.storage.ChannelExists(channel) {
-		s.logger.Error(
-			"error: cannot publish to non-existent channel",
-			zap.String("channel", channel),
+		slog.Error(
+			"cannot publish to non-existent channel",
+			slog.String("channel", channel),
 		)
 		return status.Error(codes.FailedPrecondition, ErrChannelDoesNotExist.Error())
 	}
 
 	// Store the message in the storage layer
 	if _, err := s.storage.SaveMessage(channel, msg); err != nil {
-		s.logger.Error(
-			"error: failed to save message",
-			zap.String("channel", channel),
-			zap.Error(err),
+		slog.Error(
+			"failed to save message",
+			slog.String("channel", channel),
+			slog.Any("error", err),
 		)
 		return status.Error(codes.Internal, ErrFailedToSaveMessage.Error())
 	}
 
-	s.logger.Info(
-		"info: message published",
-		zap.String("channel", channel),
+	slog.Info(
+		"message published",
+		slog.String("channel", channel),
 	)
 	return nil
 }
@@ -52,7 +52,10 @@ type publishInput struct {
 }
 
 // gRPC implementation of the Publish method
-func (s *Server) Publish(ctx context.Context, req *pb.PublishRequest) (*pb.PublishResponse, error) {
+func (s *Server) Publish(
+	ctx context.Context,
+	req *pb.PublishRequest,
+) (*pb.PublishResponse, error) {
 	input := &publishInput{
 		channel: req.GetChannel(),
 		Content: []byte(req.Content),

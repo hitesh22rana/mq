@@ -4,8 +4,7 @@ package mq
 
 import (
 	"context"
-
-	"go.uber.org/zap"
+	"log/slog"
 
 	pb "github.com/hitesh22rana/mq/pkg/proto/mq"
 )
@@ -18,11 +17,11 @@ func (s *Service) UnSubscribe(
 ) error {
 	// Check if the channel exists
 	if !s.storage.ChannelExists(channel) {
-		s.logger.Error(
+		slog.Error(
 			"error: cannot unsubscribe from non-existent channel",
-			zap.String("id", sub.GetId()),
-			zap.String("ip", sub.GetIp()),
-			zap.String("channel", channel),
+			slog.String("id", sub.GetId()),
+			slog.String("ip", sub.GetIp()),
+			slog.String("channel", channel),
 		)
 		return ErrChannelDoesNotExist
 	}
@@ -35,11 +34,11 @@ func (s *Service) UnSubscribe(
 
 	// Remove the subscriber from the channel
 	delete(s.channelToSubscribers[channel], sub)
-	s.logger.Info(
-		"info: subscriber removed",
-		zap.String("id", sub.GetId()),
-		zap.String("ip", sub.GetIp()),
-		zap.String("channel", channel),
+	slog.Info(
+		"subscriber removed",
+		slog.String("id", sub.GetId()),
+		slog.String("ip", sub.GetIp()),
+		slog.String("channel", channel),
 	)
 
 	return nil

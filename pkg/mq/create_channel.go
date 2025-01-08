@@ -4,8 +4,8 @@ package mq
 
 import (
 	"context"
+	"log/slog"
 
-	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -22,26 +22,26 @@ func (s *Service) CreateChannel(
 
 	// Check if the channel already exists, if it does return immediately
 	if s.storage.ChannelExists(channel) {
-		s.logger.Warn(
-			"warn: channel already exists",
-			zap.String("channel", channel),
+		slog.Warn(
+			"channel already exists",
+			slog.String("channel", channel),
 		)
 		return nil
 	}
 
 	// Create a new channel in the storage
 	if err := s.storage.CreateChannel(channel); err != nil {
-		s.logger.Error(
-			"error: failed to create channel",
-			zap.String("channel", channel),
-			zap.Error(err),
+		slog.Error(
+			"failed to create channel",
+			slog.String("channel", channel),
+			slog.Any("error", err),
 		)
 		return status.Error(codes.Unavailable, ErrUnableToCreateChannel.Error())
 	}
 
-	s.logger.Info(
-		"info: channel created",
-		zap.String("channel", channel),
+	slog.Info(
+		"channel created",
+		slog.String("channel", channel),
 	)
 
 	return nil
@@ -52,7 +52,10 @@ type createChannelInput struct {
 }
 
 // gRPC implementation of the CreateChannel method
-func (s *Server) CreateChannel(ctx context.Context, req *pb.CreateChannelRequest) (*pb.CreateChannelResponse, error) {
+func (s *Server) CreateChannel(
+	ctx context.Context,
+	req *pb.CreateChannelRequest,
+) (*pb.CreateChannelResponse, error) {
 	input := &createChannelInput{
 		channel: req.GetChannel(),
 	}

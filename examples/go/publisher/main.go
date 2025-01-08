@@ -6,13 +6,13 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 	"time"
 
-	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"
@@ -30,12 +30,6 @@ var (
 )
 
 func main() {
-	// Create a zap logger
-	log, err := zap.NewDevelopment()
-	if err != nil {
-		panic(err)
-	}
-
 	// Create a new gRPC client
 	conn, err := grpc.NewClient(
 		fmt.Sprintf("%s:%d", BrokerHost, BrokerPort),
@@ -47,17 +41,18 @@ func main() {
 		}),
 	)
 	if err != nil {
-		log.Fatal(
-			"fatal: failed to create client",
-			zap.String("host", BrokerHost),
-			zap.Int("port", BrokerPort),
-			zap.Error(err),
+		slog.Error(
+			"failed to create client",
+			slog.String("host", BrokerHost),
+			slog.Int("port", BrokerPort),
+			slog.Any("error", err),
 		)
+		os.Exit(1)
 	}
 	defer conn.Close()
 
 	client := pb.NewMQServiceClient(conn)
-	log.Info("info: publisher client started successfully")
+	slog.Info("publisher client started successfully")
 
 	// Create a new stream
 	reader := bufio.NewReader(os.Stdin)
@@ -73,11 +68,12 @@ func main() {
 			Channel: channel,
 		},
 	); err != nil {
-		log.Fatal(
-			"fatal: failed to create channel",
-			zap.String("channel", channel),
-			zap.Error(err),
+		slog.Error(
+			"failed to create channel",
+			slog.String("channel", channel),
+			slog.Any("error", err),
 		)
+		os.Exit(1)
 	}
 
 	// Listen for interrupt signals
@@ -105,5 +101,5 @@ func main() {
 	}()
 
 	<-quit
-	log.Info("info: shutting down publisher client...")
+	slog.Info("shutting down publisher client...")
 }

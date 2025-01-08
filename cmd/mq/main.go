@@ -5,30 +5,31 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/rosedblabs/wal"
-	"go.uber.org/zap"
 
 	"github.com/hitesh22rana/mq/internal/config"
-	"github.com/hitesh22rana/mq/internal/logger"
 	"github.com/hitesh22rana/mq/pkg/mq"
 	"github.com/hitesh22rana/mq/pkg/storage"
 	"github.com/hitesh22rana/mq/pkg/utils"
 )
 
+const (
+	// Name is the name of the service
+	Name = "mq"
+
+	// Version is the version of the service
+	Version = "v1.1.5"
+)
+
 func main() {
 	// Load configuration
 	cfg, err := config.Load()
-	if err != nil {
-		panic(err)
-	}
-
-	// Create logger
-	log, err := logger.NewLogger(cfg.Environment.Env)
 	if err != nil {
 		panic(err)
 	}
@@ -42,15 +43,12 @@ func main() {
 		BytesPerSync:   cfg.Wal.WalBytesPerSync,
 	})
 	if err != nil {
-		log.Fatal(
-			"fatal: failed to open WAL",
-			zap.Error(err),
-		)
+		slog.Error("failed to open WAL")
+		os.Exit(1)
 	}
 
 	// Create storage service
 	memoryStorage := storage.NewMemoryStorage(
-		log,
 		&storage.MemoryStorageOptions{
 			Wal:           wal,
 			BatchSize:     cfg.Storage.StorageBatchSize,
@@ -60,7 +58,6 @@ func main() {
 
 	// Create mq service
 	srv := mq.NewService(
-		log,
 		&mq.ServiceOptions{
 			Storage: memoryStorage,
 		},
@@ -68,7 +65,6 @@ func main() {
 
 	// Create mq server
 	server := mq.NewServer(
-		log,
 		&mq.ServerOptions{
 			Validator: utils.NewValidator(),
 			Generator: utils.NewGenerator(),
@@ -82,10 +78,10 @@ func main() {
 		fmt.Sprintf(":%d", cfg.Server.ServerPort),
 	)
 	if err != nil {
-		log.Fatal(
-			"fatal: failed to listen",
-			zap.Int("port", cfg.Server.ServerPort),
-			zap.Error(err),
+		slog.Error(
+			"failed to listen",
+			slog.Int("port", cfg.Server.ServerPort),
+			slog.Any("error", err),
 		)
 	}
 
@@ -99,14 +95,24 @@ func main() {
 
 	// Start the mq server in a separate goroutine
 	go func() {
-		log.Info(
-			"info: mq server started",
-			zap.Int("port", cfg.Server.ServerPort),
+		fmt.Printf(`
+███╗   ███╗ ██████╗ 
+████╗ ████║██╔═══██╗
+██╔████╔██║██║   ██║
+██║╚██╔╝██║██║▄▄ ██║
+██║ ╚═╝ ██║╚██████╔╝
+╚═╝     ╚═╝ ╚══▀▀═╝ 
+
+`)
+		slog.Info(
+			"starting mq",
+			slog.String("version", Version),
+			slog.String("port", fmt.Sprintf("%d", cfg.Server.ServerPort)),
 		)
 		if err := grpcServer.Serve(listener); err != nil {
-			log.Fatal(
-				"fatal: failed to serve",
-				zap.Error(err),
+			slog.Error(
+				"failed to serve",
+				slog.Any("error", err),
 			)
 		}
 	}()
@@ -115,7 +121,7 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Info("info: shutting down mq server...")
+	slog.Info("shutting down mq server...")
 
 	// Create a context with a timeout for the graceful shutdown
 	ctx, cancel := context.WithTimeout(
@@ -134,9 +140,9 @@ func main() {
 
 	select {
 	case <-done:
-		log.Info("info: server stopped gracefully")
+		slog.Info("server stopped gracefully")
 	case <-ctx.Done():
-		log.Warn("warn: server shutdown timed out, forcing stop")
+		slog.Warn("server shutdown timed out, forcing stop")
 		grpcServer.Stop()
 	}
 }

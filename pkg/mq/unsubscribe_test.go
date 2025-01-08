@@ -8,7 +8,6 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
 
 	"github.com/hitesh22rana/mq/pkg/mocks"
 	pb "github.com/hitesh22rana/mq/pkg/proto/mq"
@@ -18,11 +17,9 @@ func TestUnsubscribe(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	logger := zap.NewNop()
 	mockStorage := mocks.NewMockStorage(ctrl)
 
 	service := NewService(
-		logger,
 		&ServiceOptions{
 			Storage: mockStorage,
 		},

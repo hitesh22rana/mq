@@ -8,7 +8,6 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -20,11 +19,9 @@ func TestPublishService(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	logger := zap.NewNop()
 	mockStorage := mocks.NewMockStorage(ctrl)
 
 	service := NewService(
-		logger,
 		&ServiceOptions{
 			Storage: mockStorage,
 		},
@@ -97,13 +94,11 @@ func TestPublishServer(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	logger := zap.NewNop()
 	mockValidator := mocks.NewMockValidator(ctrl)
 	mockGenerator := mocks.NewMockGenerator(ctrl)
 	mockService := mocks.NewMockMQ(ctrl)
 
 	server := NewServer(
-		logger,
 		&ServerOptions{
 			Validator: mockValidator,
 			Generator: mockGenerator,

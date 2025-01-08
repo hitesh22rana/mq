@@ -5,10 +5,11 @@ package storage
 import (
 	"fmt"
 	"io"
+	"log/slog"
+	"os"
 	"sync"
 
 	"github.com/rosedblabs/wal"
-	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 
 	pb "github.com/hitesh22rana/mq/pkg/proto/mq"
@@ -53,7 +54,6 @@ type MemoryStorageOptions struct {
 // MemoryStorage is an in-memory implementation of the Storage interface
 type MemoryStorage struct {
 	mu                       sync.RWMutex
-	logger                   *zap.Logger
 	wal                      *wal.WAL
 	batchSize                uint64
 	data                     map[string]*chunkList
@@ -61,10 +61,11 @@ type MemoryStorage struct {
 }
 
 // NewMemoryStorage initializes a new MemoryStorage instance
-func NewMemoryStorage(logger *zap.Logger, options *MemoryStorageOptions) *MemoryStorage {
+func NewMemoryStorage(
+	options *MemoryStorageOptions,
+) *MemoryStorage {
 	m := &MemoryStorage{
 		mu:                       sync.RWMutex{},
-		logger:                   logger,
 		wal:                      options.Wal,
 		batchSize:                options.BatchSize,
 		data:                     make(map[string]*chunkList),
@@ -76,7 +77,7 @@ func NewMemoryStorage(logger *zap.Logger, options *MemoryStorageOptions) *Memory
 	}
 
 	// Inform the user that the storage is being synced
-	m.logger.Info("info: syncing storage on startup, this may take a while")
+	slog.Info("syncing storage on startup, this may take a while")
 
 	// Load data from the Write-Ahead Log (WAL)
 	reader := m.wal.NewReader()
@@ -87,18 +88,19 @@ func NewMemoryStorage(logger *zap.Logger, options *MemoryStorageOptions) *Memory
 				break
 			}
 
-			m.logger.Fatal(
-				"fatal: failed to read WAL",
-				zap.Error(err),
+			slog.Error(
+				"failed to read WAL",
+				slog.Any("error", err),
 			)
+			os.Exit(1)
 		}
 
 		// Unmarshal the protobuf data
 		entry := &pb.WalEntry{}
 		if err := proto.Unmarshal(data, entry); err != nil {
-			m.logger.Error(
-				"error: failed to unmarshal data",
-				zap.Error(err),
+			slog.Error(
+				"failed to unmarshal data",
+				slog.Any("error", err),
 			)
 			break
 		}
@@ -109,9 +111,9 @@ func NewMemoryStorage(logger *zap.Logger, options *MemoryStorageOptions) *Memory
 		// Create the channel if it does not exist
 		if !m.ChannelExists(channel) {
 			_ = m.CreateChannel(channel)
-			m.logger.Info(
-				"info: created channel",
-				zap.String("channel", channel),
+			slog.Info(
+				"created channel",
+				slog.String("channel", channel),
 			)
 		}
 
@@ -129,7 +131,7 @@ func NewMemoryStorage(logger *zap.Logger, options *MemoryStorageOptions) *Memory
 	}
 
 	// Inform the user that the storage has been synced
-	m.logger.Info("info: storage synced successfully")
+	slog.Info("storage synced successfully")
 	return m
 }
 
@@ -141,9 +143,9 @@ func (m *MemoryStorage) SaveMessage(
 	// Create the channel if it does not exist
 	if !m.ChannelExists(channel) {
 		_ = m.CreateChannel(channel)
-		m.logger.Info(
-			"info: created channel",
-			zap.String("channel", channel),
+		slog.Info(
+			"created channel",
+			slog.String("channel", channel),
 		)
 	}
 
@@ -161,9 +163,9 @@ func (m *MemoryStorage) SaveMessage(
 
 	data, err := proto.Marshal(entry)
 	if err != nil {
-		m.logger.Error(
-			"error: failed to marshal data",
-			zap.Error(err),
+		slog.Error(
+			"failed to marshal data",
+			slog.Any("error", err),
 		)
 
 		return msgList.len, ErrInternal
@@ -171,9 +173,9 @@ func (m *MemoryStorage) SaveMessage(
 
 	// Write the data to the WAL
 	if _, err = m.wal.Write(data); err != nil {
-		m.logger.Error(
-			"error: failed to write to WAL",
-			zap.Error(err),
+		slog.Error(
+			"failed to write to WAL",
+			slog.Any("error", err),
 		)
 
 		return msgList.len, ErrInternal
@@ -203,9 +205,9 @@ func (m *MemoryStorage) GetMessages(
 
 	messages, exists := m.data[channel]
 	if !exists {
-		m.logger.Error(
-			"error: channel does not exist",
-			zap.String("channel", channel),
+		slog.Error(
+			"channel does not exist",
+			slog.String("channel", channel),
 		)
 		return nil, 0, fmt.Errorf("channel '%s' does not exist", channel)
 	}

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"os/signal"
 	"strings"
@@ -14,7 +15,6 @@ import (
 
 	pb "mq/examples/go/.proto/mq"
 
-	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
@@ -29,28 +29,23 @@ var (
 )
 
 func main() {
-	// Create a zap logger
-	log, err := zap.NewDevelopment()
-	if err != nil {
-		panic(err)
-	}
-
 	// Create a new gRPC client
 	conn, err := grpc.NewClient(
 		fmt.Sprintf("%s:%d", BrokerHost, BrokerPort),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
-		log.Fatal(
-			"fatal: failed to create client",
-			zap.String("host", BrokerHost),
-			zap.Int("port", BrokerPort),
-			zap.Error(err),
+		slog.Error(
+			"failed to create client",
+			slog.String("host", BrokerHost),
+			slog.Int("port", BrokerPort),
+			slog.Any("error", err),
 		)
+		os.Exit(1)
 	}
 	defer conn.Close()
 	client := pb.NewMQServiceClient(conn)
-	log.Info("info: subscriber client started successfully")
+	slog.Info("subscriber client started successfully")
 
 	// Create a new stream
 	reader := bufio.NewReader(os.Stdin)
@@ -69,7 +64,8 @@ func main() {
 	} else if startOffset == "1" {
 		offset = pb.Offset_OFFSET_LATEST
 	} else {
-		log.Fatal("fatal: invalid offset")
+		slog.Error("invalid offset")
+		os.Exit(1)
 	}
 
 	// Create a new context
@@ -83,10 +79,11 @@ func main() {
 		PullInterval: SubscriberDataPullingInterval,
 	})
 	if err != nil {
-		log.Fatal(
-			"fatal: failed to subscribe",
-			zap.Error(err),
+		slog.Error(
+			"failed to subscribe",
+			slog.Any("error", err),
 		)
+		os.Exit(1)
 	}
 
 	quit := make(chan os.Signal, 1)
@@ -106,10 +103,11 @@ func main() {
 
 			if err != nil {
 				cancel()
-				log.Fatal(
-					"fatal: failed to receive message",
-					zap.Error(err),
+				slog.Error(
+					"failed to receive message",
+					slog.Any("error", err),
 				)
+				os.Exit(1)
 			}
 		}
 	}()
