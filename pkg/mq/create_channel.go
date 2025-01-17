@@ -48,7 +48,7 @@ func (s *Service) CreateChannel(
 }
 
 type createChannelInput struct {
-	channel string `validate:"required"`
+	Channel string `validate:"required"`
 }
 
 // gRPC implementation of the CreateChannel method
@@ -57,7 +57,7 @@ func (s *Server) CreateChannel(
 	req *pb.CreateChannelRequest,
 ) (*pb.CreateChannelResponse, error) {
 	input := &createChannelInput{
-		channel: req.GetChannel(),
+		Channel: req.GetChannel(),
 	}
 
 	// Validate the input request
@@ -66,7 +66,7 @@ func (s *Server) CreateChannel(
 	}
 
 	// Create a new channel
-	if err := s.srv.CreateChannel(ctx, input.channel); err != nil {
+	if err := s.srv.CreateChannel(ctx, input.Channel); err != nil {
 		return nil, err
 	}
 

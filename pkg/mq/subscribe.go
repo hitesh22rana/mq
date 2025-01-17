@@ -99,9 +99,9 @@ func (s *Service) Subscribe(
 }
 
 type subscribeInput struct {
-	channel      string    `validate:"required"`
-	offset       pb.Offset `validate:"oneof=0 1"`
-	pullInterval uint64    `validate:"gte=0"`
+	Channel      string    `validate:"required"`
+	Offset       pb.Offset `validate:"required,offset"`
+	PullInterval uint64    `validate:"required,gte=0"`
 }
 
 // gRPC implementation of the Subscribe method
@@ -110,9 +110,9 @@ func (s *Server) Subscribe(
 	stream pb.MQService_SubscribeServer,
 ) error {
 	input := &subscribeInput{
-		channel:      req.GetChannel(),
-		offset:       req.GetOffset(),
-		pullInterval: req.GetPullInterval(),
+		Channel:      req.GetChannel(),
+		Offset:       req.GetOffset(),
+		PullInterval: req.GetPullInterval(),
 	}
 
 	// Validate the input request
@@ -148,9 +148,9 @@ func (s *Server) Subscribe(
 			"warn: unsubscribing client",
 			slog.String("id", sub.GetId()),
 			slog.String("ip", sub.GetIp()),
-			slog.String("channel", input.channel),
+			slog.String("channel", input.Channel),
 		)
-		_ = s.srv.UnSubscribe(stream.Context(), sub, input.channel)
+		_ = s.srv.UnSubscribe(stream.Context(), sub, input.Channel)
 		closeOnce.Do(func() {
 			close(msgChan)
 		})
@@ -160,16 +160,16 @@ func (s *Server) Subscribe(
 	if err := s.srv.Subscribe(
 		stream.Context(),
 		sub,
-		input.offset,
-		input.pullInterval,
-		input.channel,
+		input.Offset,
+		input.PullInterval,
+		input.Channel,
 		msgChan,
 	); err != nil {
 		slog.Error(
 			"failed to subscribe",
 			slog.String("ip", ip),
 			slog.String("id", sub.GetId()),
-			slog.String("channel", input.channel),
+			slog.String("channel", input.Channel),
 			slog.Any("error", err),
 		)
 		return err
@@ -190,7 +190,7 @@ func (s *Server) Subscribe(
 		case <-stream.Context().Done():
 			// Unsubscribe and close the channel only if it hasn't been closed yet
 			closeOnce.Do(func() {
-				_ = s.srv.UnSubscribe(stream.Context(), sub, input.channel)
+				_ = s.srv.UnSubscribe(stream.Context(), sub, input.Channel)
 				close(msgChan)
 			})
 			return nil

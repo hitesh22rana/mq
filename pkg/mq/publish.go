@@ -47,7 +47,7 @@ func (s *Service) Publish(
 }
 
 type publishInput struct {
-	channel string `validate:"required"`
+	Channel string `validate:"required"`
 	Content []byte `validate:"required"`
 }
 
@@ -57,7 +57,7 @@ func (s *Server) Publish(
 	req *pb.PublishRequest,
 ) (*pb.PublishResponse, error) {
 	input := &publishInput{
-		channel: req.GetChannel(),
+		Channel: req.GetChannel(),
 		Content: []byte(req.Content),
 	}
 
@@ -69,7 +69,7 @@ func (s *Server) Publish(
 	// Publish the message
 	if err := s.srv.Publish(
 		ctx,
-		input.channel,
+		input.Channel,
 		&pb.Message{
 			Id:        s.generator.GetUniqueMessageID(),
 			Content:   input.Content,

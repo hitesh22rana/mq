@@ -24,7 +24,7 @@ const (
 	Name = "mq"
 
 	// Version is the version of the service
-	Version = "v1.1.5"
+	Version = "v1.1.6"
 )
 
 func main() {

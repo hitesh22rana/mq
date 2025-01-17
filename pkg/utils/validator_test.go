@@ -6,35 +6,54 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	pb "github.com/hitesh22rana/mq/pkg/proto/mq"
 )
 
 func TestValidator(t *testing.T) {
 	v := NewValidator()
 
 	tests := []struct {
-		name string
-		fn   func() error
-		err  error
+		name  string
+		fn    func() error
+		isErr bool
 	}{
 		{
-			name: "ValidateStruct",
+			name: "Valid struct",
 			fn: func() error {
 				return v.ValidateStruct(struct {
-					Name   string `validate:"required"`
-					Offset int    `validate:"oneof=0 1"`
+					Name   string    `validate:"required"`
+					Offset pb.Offset `validate:"required,offset"`
 				}{
 					Name:   "test",
-					Offset: 0,
+					Offset: pb.Offset_OFFSET_BEGINNING,
 				})
 			},
-			err: nil,
+			isErr: false,
+		},
+		{
+			name: "InvalidOffset",
+			fn: func() error {
+				return v.ValidateStruct(struct {
+					Name   string    `validate:"required"`
+					Offset pb.Offset `validate:"required,offset"`
+				}{
+					Name:   "test",
+					Offset: pb.Offset_OFFSET_UNKNOWN,
+				})
+			},
+			isErr: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fn()
-			assert.Equal(t, tt.err, err)
+			if tt.isErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
 		})
 	}
 }
